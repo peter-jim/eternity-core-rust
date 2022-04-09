@@ -1,0 +1,2 @@
+cargo:rustc-env=TYPENUM_BUILD_CONSTS=/Users/lance/myProject/eternity-core-rust/eternity-core-rust/target/debug/build/typenum-b7278a69c1ef4e45/out/consts.rs
+cargo:rustc-env=TYPENUM_BUILD_OP=/Users/lance/myProject/eternity-core-rust/eternity-core-rust/target/debug/build/typenum-b7278a69c1ef4e45/out/op.rs
