@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "lldb",
+        "request": "launch",
+        "name": "Custom launch",
+        "program": "${workspaceRoot}/target/debug/${workspaceFolderBasename}",
+        "cwd": "${workspaceRoot}",
+      },
+    ]
+}
