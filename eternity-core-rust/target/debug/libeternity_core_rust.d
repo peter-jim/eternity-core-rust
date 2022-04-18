@@ -1,1 +1,0 @@
-/Users/lance/myProject/eternity-core-rust/eternity-core-rust/target/debug/libeternity_core_rust.rlib: /Users/lance/myProject/eternity-core-rust/eternity-core-rust/src/api.rs /Users/lance/myProject/eternity-core-rust/eternity-core-rust/src/lib.rs
