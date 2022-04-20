@@ -1,9 +1,27 @@
 use std::error::Error;
 use eternity_core_rust::api::*;
+use eternity_core_rust::market::*;
+use reqwest::blocking::Client;
 
 fn main() -> Result<(), Box<dyn Error>> {
 
     let  url: String = String::from(API::Spot(Spot::Depth));
-    print!("{:?}",url);
+    print!("{:?}\n",url);
+
+    let market: Market = Binance::new(Option::Some(String::from("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx")),Option::Some(String::from("GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA")));
+      // Latest price for ONE symbol
+      match market.get_price("BNBUSDT") {
+        Ok(answer) => println!("{:?}", answer),
+        Err(e) => println!("Error: {}", e),
+    }
     Ok(())
+
+
+
+    // let client = Client::new();
+    // let resp = client.get("https://api2.binance.com/api/v3/ticker/price?symbol=BNBUSDT").send()?;
+    // println!("Got {:?}", resp);
+
+
+
 }

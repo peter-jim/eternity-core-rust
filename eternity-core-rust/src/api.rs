@@ -1,7 +1,6 @@
-
-
-
-
+use crate::config::*;
+use crate::market::*;
+use crate::client::*;
 #[derive(Debug)]
 pub enum API {
     Spot(Spot),
@@ -68,6 +67,30 @@ impl From<API> for String{
             },
         }
         )
+    }
+}
+
+
+pub trait Binance {
+    fn new(api_key: Option<String>, secret_key: Option<String>) -> Self;
+    fn new_with_config(
+        api_key: Option<String>, secret_key: Option<String>, config: &Config,
+    ) -> Self;
+}
+
+
+impl Binance for Market {
+    fn new(api_key: Option<String>, secret_key: Option<String>) -> Market {
+        Self::new_with_config(api_key, secret_key, &Config::default())
+    }
+
+    fn new_with_config(
+        api_key: Option<String>, secret_key: Option<String>, config: &Config,
+    ) -> Market {
+        Market {
+            client: Client::new(api_key, secret_key, config.rest_api_endpoint.clone()),
+            recv_window: config.recv_window,
+        }
     }
 }
 

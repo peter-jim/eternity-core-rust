@@ -1,0 +1,11 @@
+/Users/lance/myProject/eternity-core-rust/eternity-core-rust/target/debug/deps/error_chain-e07bc1951b30b608.rmeta: /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/lib.rs /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/impl_error_chain_kind.rs /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/error_chain.rs /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/quick_main.rs /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/backtrace.rs
+
+/Users/lance/myProject/eternity-core-rust/eternity-core-rust/target/debug/deps/liberror_chain-e07bc1951b30b608.rlib: /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/lib.rs /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/impl_error_chain_kind.rs /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/error_chain.rs /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/quick_main.rs /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/backtrace.rs
+
+/Users/lance/myProject/eternity-core-rust/eternity-core-rust/target/debug/deps/error_chain-e07bc1951b30b608.d: /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/lib.rs /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/impl_error_chain_kind.rs /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/error_chain.rs /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/quick_main.rs /Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/backtrace.rs
+
+/Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/lib.rs:
+/Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/impl_error_chain_kind.rs:
+/Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/error_chain.rs:
+/Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/quick_main.rs:
+/Users/lance/.cargo/registry/src/github.com-1ecc6299db9ec823/error-chain-0.12.4/src/backtrace.rs:
