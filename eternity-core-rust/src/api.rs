@@ -1,3 +1,4 @@
+use crate::account::Account;
 use crate::config::*;
 use crate::market::*;
 use crate::client::*;
@@ -88,6 +89,22 @@ impl Binance for Market {
         api_key: Option<String>, secret_key: Option<String>, config: &Config,
     ) -> Market {
         Market {
+            client: Client::new(api_key, secret_key, config.rest_api_endpoint.clone()),
+            recv_window: config.recv_window,
+        }
+    }
+}
+
+
+impl Binance for Account {
+    fn new(api_key: Option<String>, secret_key: Option<String>) -> Account {
+        Self::new_with_config(api_key, secret_key, &Config::default())
+    }
+
+    fn new_with_config(
+        api_key: Option<String>, secret_key: Option<String>, config: &Config,
+    ) -> Account {
+        Account {
             client: Client::new(api_key, secret_key, config.rest_api_endpoint.clone()),
             recv_window: config.recv_window,
         }

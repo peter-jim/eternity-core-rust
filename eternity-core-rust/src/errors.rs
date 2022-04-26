@@ -6,6 +6,7 @@ pub struct BinanceContentError {
     pub msg: String,
 }
 
+
 error_chain! {
     errors {
         BinanceError(response: BinanceContentError)
@@ -26,6 +27,5 @@ error_chain! {
         Tungstenite(tungstenite::Error);
         TimestampError(std::time::SystemTimeError);
     }
-      
-    
 }
+

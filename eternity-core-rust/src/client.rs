@@ -1,6 +1,11 @@
+use hex::encode as hex_encode;
+use hmac::{Hmac, Mac, NewMac};
+use sha2::Sha256;
+
 use crate::errors::*;
 use reqwest::StatusCode;
 use reqwest::blocking::Response;
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue, USER_AGENT, CONTENT_TYPE};
 
 use serde::de::DeserializeOwned;
 use crate::api::API;
@@ -41,9 +46,43 @@ impl Client {
 
         let client = &self.inner_client;
         println!("{:?}",url);
-        let response = client.get("https://api2.binance.com/api/v3/ticker/price?symbol=BNBUSDT").send()?;
+        let response = client.get(url).send()?;
 
         self.handler(response)
+    }
+
+    pub fn get_signed<T: DeserializeOwned>(
+        &self, endpoint: API, request: Option<String>,
+    ) -> Result<T> {
+        let url = self.sign_request(endpoint, request);
+        let client = &self.inner_client;
+        let response = client
+            .get(url.as_str())
+            .headers(self.build_headers(true)?)
+            .send()?;
+
+        self.handler(response)
+    }
+
+    // Request must be signed
+    fn sign_request(&self, endpoint: API, request: Option<String>) -> String {
+        match request {
+            Some(request) => {
+                let mut signed_key =
+                    Hmac::<Sha256>::new_from_slice(self.secret_key.as_bytes()).unwrap();
+                signed_key.update(request.as_bytes());
+                let signature = hex_encode(signed_key.finalize().into_bytes());
+                let request_body: String = format!("{}&signature={}", request, signature);
+                format!("{}{}?{}", self.host, String::from(endpoint), request_body)
+            }
+            None => {
+                let signed_key =
+                    Hmac::<Sha256>::new_from_slice(self.secret_key.as_bytes()).unwrap();
+                let signature = hex_encode(signed_key.finalize().into_bytes());
+                let request_body: String = format!("&signature={}", signature);
+                format!("{}{}?{}", self.host, String::from(endpoint), request_body)
+            }
+        }
     }
 
 
@@ -69,5 +108,24 @@ impl Client {
                 bail!(format!("Received response: {:?}", s));
             }
         }
+    }
+
+
+    fn build_headers(&self, content_type: bool) -> Result<HeaderMap> {
+        let mut custom_headers = HeaderMap::new();
+
+        custom_headers.insert(USER_AGENT, HeaderValue::from_static("binance-rs"));
+        if content_type {
+            custom_headers.insert(
+                CONTENT_TYPE,
+                HeaderValue::from_static("application/x-www-form-urlencoded"),
+            );
+        }
+        custom_headers.insert(
+            HeaderName::from_static("x-mbx-apikey"),
+            HeaderValue::from_str(self.api_key.as_str())?,
+        );
+
+        Ok(custom_headers)
     }
 }

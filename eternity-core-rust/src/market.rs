@@ -25,6 +25,8 @@ impl Market{
           self.client.get(API::Spot(Spot::Price), Some(request))
       }
 
+      
+
 
 
 }

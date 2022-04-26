@@ -1,7 +1,7 @@
 use std::error::Error;
 use eternity_core_rust::api::*;
 use eternity_core_rust::market::*;
-use reqwest::blocking::Client;
+use eternity_core_rust::account::*;
 
 fn main() -> Result<(), Box<dyn Error>> {
 
@@ -14,6 +14,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         Ok(answer) => println!("{:?}", answer),
         Err(e) => println!("Error: {}", e),
     }
+
+    let account:Account =  Binance::new(Option::Some(String::from("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx")),Option::Some(String::from("GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA")));
+
+      match account.get_account() {
+        Ok(answer) => println!("{:?}", answer),
+        Err(e) => println!("Error: {}", e),
+    }
+
     Ok(())
 
 
