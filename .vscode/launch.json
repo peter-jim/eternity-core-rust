@@ -2,11 +2,21 @@
     "version": "0.2.0",
     "configurations": [
       {
-        "type": "lldb",
+        "name": "(lldb) 启动",
+        "type": "cppdbg",
         "request": "launch",
-        "name": "Custom launch",
-        "program": "${workspaceRoot}/target/debug/${workspaceFolderBasename}",
-        "cwd": "${workspaceRoot}",
-      },
+ 
+        "program": "/Users/lance/myProject/eternity-core-rust/eternity-core-rust/target/debug/eternity-core-rust",
+        
+        "args": [],
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}",
+        "environment": [],
+        "externalConsole": false,
+        "MIMode": "lldb"
+    }
+      
+      
+     
     ]
 }

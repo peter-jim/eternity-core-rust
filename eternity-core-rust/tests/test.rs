@@ -67,7 +67,7 @@ mod tests {
 
       let server1 =  Server{
         quant_id:"s".to_string(),
-        thrding: std::thread::spawn(move||data(1)),
+        thrding: std::thread::spawn(move|| Server::data(1)),
         start_time: "2021".to_string(),
         account:"账户1".to_string(),
         reciver:rx,

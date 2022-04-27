@@ -2,6 +2,10 @@ use crate::account::Account;
 use crate::config::*;
 use crate::market::*;
 use crate::client::*;
+use crate::server::*;
+
+
+
 #[derive(Debug)]
 pub enum API {
     Spot(Spot),
@@ -94,6 +98,24 @@ impl Binance for Market {
         }
     }
 }
+
+impl Server {
+    fn new(api_key: Option<String>, secret_key: Option<String>) -> Market {
+        Self::new_with_config(api_key, secret_key, &Config::default())
+    }
+
+    fn new_with_config(
+        api_key: Option<String>, secret_key: Option<String>, config: &Config,
+    ) -> Market {
+        Market {
+            client: Client::new(api_key, secret_key, config.rest_api_endpoint.clone()),
+            recv_window: config.recv_window,
+        }
+    }
+}
+
+
+
 
 
 impl Binance for Account {
