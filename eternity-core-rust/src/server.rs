@@ -39,7 +39,7 @@ impl Server {
        /*
        （Automatic Investment Plan every day,total 30days.
        */
-
+        let data = num;
        //step1 初始化，监听来自控制中心的事件
 
        //step2 执行
@@ -48,7 +48,7 @@ impl Server {
 
        //step4 结束运行，向控制中心发送事件。随后线程自毁。
 
-        println!("{:?}",num+num);
+        println!("{:?}",data);
 
 
     }

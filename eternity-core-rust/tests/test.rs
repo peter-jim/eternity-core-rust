@@ -10,6 +10,10 @@ mod tests {
     use std::time::Duration;
     use std::sync::mpsc::channel;
     use std::sync::mpsc::Sender ;
+    use std::fs::File;
+    extern crate serde;
+extern crate serde_json;
+
     struct Server{
         quant_id:String,
         thrding: JoinHandle<()>,
@@ -93,4 +97,13 @@ mod tests {
 
 
     }
+
+    #[test]
+    fn json(){
+        let f = File::open("conf.json").unwrap();
+        let v: serde_json::Value = serde_json::from_reader(f).unwrap();
+        println!("{:?}", v["name"].as_str().unwrap());
+    }
+
+
 }
