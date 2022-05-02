@@ -1,14 +1,18 @@
 {
     "name":"eternity",
     "binance":{
-        "address":"  ",
+        
+        "dexaddress":"  ",
+        "serveraddress":" ",
+        "version":"0.1",
         "api_key":"y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx",
         "secrect_key":"GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA",
         "model":["AIP","AIP30","AIP100"," "],
-        "maxaccount":200
+        "maxaccount":10
     },
     "mexc":{
         "address":"  ",
+        "version":"0",
         "api_key":"y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx",
         "secrect_key":"GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA",
         "model":["AIP","AIP30","AIP100"," "],
@@ -16,6 +20,7 @@
     },
     "huobi":{
         "address":"  ",
+        "version":"0",
         "api_key":"y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx",
         "secrect_key":"GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA",
         "model":["AIP","AIP30","AIP100"," "],

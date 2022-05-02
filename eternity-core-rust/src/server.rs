@@ -5,15 +5,17 @@ use crate::account::*;
 
 #[derive(Debug)]
 pub struct Server{
-    pub quant_id:String,
+    pub quant_id:usize,
     pub threading: JoinHandle<()>,
     pub start_time: String,
     pub account:String,
-    pub reciver:Receiver<String>,
-    pub sender:Sender<String>,
+    pub server_reciver:Receiver<String>,
+    pub centrial_sender:Sender<String>,
 }
 
 impl Server {
+
+   
     
     pub fn get_price(){
         println!("hello");
@@ -35,11 +37,11 @@ impl Server {
     }
 
 
-    pub fn AIP_30(num:i32){
+    pub fn AIP_30(server_reciver:Receiver<String>, server_sender:Sender<String>){
        /*
        （Automatic Investment Plan every day,total 30days.
        */
-        let data = num;
+       
        //step1 初始化，监听来自控制中心的事件
 
        //step2 执行
@@ -48,7 +50,15 @@ impl Server {
 
        //step4 结束运行，向控制中心发送事件。随后线程自毁。
 
-        println!("{:?}",data);
+        println!("{:?}","服务已启动");
+
+        loop {
+            std::thread::sleep(std::time::Duration::from_secs(1));
+            println!(" 接收到消息 {:?} ",server_reciver.recv());
+            server_sender.send(String::from("hello center")).unwrap();
+        }
+
+        
 
 
     }

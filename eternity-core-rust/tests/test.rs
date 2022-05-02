@@ -103,6 +103,16 @@ extern crate serde_json;
         let f = File::open("conf.json").unwrap();
         let v: serde_json::Value = serde_json::from_reader(f).unwrap();
         println!("{:?}", v["name"].as_str().unwrap());
+
+
+        let web3_event_info = String::from("AIP");
+        for i in v["binance"]["model"].as_array().unwrap(){
+            
+            if &i.as_str().unwrap() == &web3_event_info{
+                println!("{:?}  --  {:?}",&i.as_str().unwrap(),&web3_event_info);
+            }
+         
+        }
     }
 
 
