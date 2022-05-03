@@ -1,6 +1,7 @@
 
 use serde::{Deserialize, Serialize};
 
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SymbolPrice {
     pub symbol: String,
@@ -8,6 +9,49 @@ pub struct SymbolPrice {
     pub price: f64,
 }
 
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct Transaction {
+    pub symbol: String,
+    pub order_id: u64,
+    pub order_list_id: Option<i64>,
+    pub client_order_id: String,
+    pub transact_time: u64,
+    #[serde(with = "string_or_float")]
+    pub price: f64,
+    #[serde(with = "string_or_float")]
+    pub orig_qty: f64,
+    #[serde(with = "string_or_float")]
+    pub executed_qty: f64,
+    #[serde(with = "string_or_float")]
+    pub cummulative_quote_qty: f64,
+    #[serde(with = "string_or_float", default = "default_stop_price")]
+    pub stop_price: f64,
+    pub status: String,
+    pub time_in_force: String,
+    #[serde(rename = "type")]
+    pub type_name: String,
+    pub side: String,
+    pub fills: Option<Vec<FillInfo>>,
+}
+
+fn default_stop_price() -> f64 {
+    0.0
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct FillInfo {
+    #[serde(with = "string_or_float")]
+    pub price: f64,
+    #[serde(with = "string_or_float")]
+    pub qty: f64,
+    #[serde(with = "string_or_float")]
+    pub commission: f64,
+    pub commission_asset: String,
+    pub trade_id: Option<u64>,
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]

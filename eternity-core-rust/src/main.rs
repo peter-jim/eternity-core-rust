@@ -82,8 +82,6 @@ fn main() -> Result<(), Box<dyn Error>> {
              stack[0].centrial_sender.send(String::from("sxxx")); 
              std::thread::sleep(std::time::Duration::from_secs(3));
 
-            
-
              println!("{:?} 主程序消息   ",stack[0].server_reciver.recv() )
 
         }

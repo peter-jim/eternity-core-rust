@@ -1,3 +1,4 @@
+
 use std::{thread::JoinHandle, sync::mpsc::Receiver,sync::mpsc::Sender};
 use crate::market::*;
 use crate::api::*;
@@ -52,11 +53,44 @@ impl Server {
 
         println!("{:?}","服务已启动");
 
+        let api_key = Some("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx".into());
+        let secret_key = Some("GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA".into());
+    
+        let account: Account = Binance::new(api_key, secret_key);
+        
+        let answer =   account.get_account().unwrap().balances;
+      
+        let mut usdt:f32 = 0.0;
+        
+        for i in answer{
+            
+            if i.asset == "USDT"{
+                println!("{:?}",&i.free);
+                usdt = i.free.clone().parse().unwrap();
+        
+            }
+        }
+
+        println!(" usdt is {:?}",usdt);
+       
+        
+
+
+
         loop {
+            
+            let market: Market = Binance::new(Option::Some(String::from("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx")),Option::Some(String::from("GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA")));
+            // Latest price for ONE symbol
+            match market.get_price("BNBUSDT") {
+                Ok(answer) => println!("{:?}", answer),
+                Err(e) => println!("Error: {}", e),
+            }
+
             std::thread::sleep(std::time::Duration::from_secs(1));
             println!(" 接收到消息 {:?} ",server_reciver.recv());
             server_sender.send(String::from("hello center")).unwrap();
         }
+
 
         
 

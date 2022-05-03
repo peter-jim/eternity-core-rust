@@ -115,5 +115,19 @@ extern crate serde_json;
         }
     }
 
+    #[test]
+    fn string_to_f32(){
+
+        let  a = "123".parse::<i32>().unwrap();
+
+        let b:f32 ="0.123".parse().unwrap();
+
+        println!("{:?}   ",&a);
+        
+        println!("{:?}   ",&b);
+
+
+    }
+
 
 }
