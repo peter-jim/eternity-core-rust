@@ -11,6 +11,8 @@ mod tests {
     use std::sync::mpsc::channel;
     use std::sync::mpsc::Sender ;
     use std::fs::File;
+    use std::io::BufWriter;
+use std::io::BufReader;
     extern crate serde;
 extern crate serde_json;
 
@@ -99,7 +101,7 @@ extern crate serde_json;
     }
 
     #[test]
-    fn json(){
+    fn json_read_wirite(){
         let f = File::open("conf.json").unwrap();
         let v: serde_json::Value = serde_json::from_reader(f).unwrap();
         println!("{:?}", v["name"].as_str().unwrap());
@@ -112,7 +114,12 @@ extern crate serde_json;
                 println!("{:?}  --  {:?}",&i.as_str().unwrap(),&web3_event_info);
             }
          
-        }
+        }   
+
+         // write out the file
+    let writer = BufWriter::new(File::create("./log/wirte.json").unwrap());
+    serde_json::to_writer_pretty(writer, &v).unwrap();
+        
     }
 
     #[test]

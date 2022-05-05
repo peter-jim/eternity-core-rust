@@ -9,6 +9,32 @@ pub struct SymbolPrice {
     pub price: f64,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct Order {
+    pub symbol: String,
+    pub order_id: u64,
+    pub order_list_id: i64,
+    pub client_order_id: String,
+    #[serde(with = "string_or_float")]
+    pub price: f64,
+    pub orig_qty: String,
+    pub executed_qty: String,
+    pub cummulative_quote_qty: String,
+    pub status: String,
+    pub time_in_force: String,
+    #[serde(rename = "type")]
+    pub type_name: String,
+    pub side: String,
+    #[serde(with = "string_or_float")]
+    pub stop_price: f64,
+    pub iceberg_qty: String,
+    pub time: u64,
+    pub update_time: u64,
+    pub is_working: bool,
+    pub orig_quote_order_qty: String,
+}
+
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]

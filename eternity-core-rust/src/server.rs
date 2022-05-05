@@ -13,6 +13,16 @@ pub struct Server{
     pub server_reciver:Receiver<String>,
     pub centrial_sender:Sender<String>,
 }
+#[derive(Debug)]
+pub struct OrderStatus{
+    pub clientid:String,// 客户自己设置的ID
+    pub price:String,
+    pub origqty:String,
+    pub status: String,// 用户设置的原始订单数量
+    pub types: String,
+    pub side: String,
+}
+
 
 impl Server {
 
@@ -53,11 +63,11 @@ impl Server {
 
         println!("{:?}","服务已启动");
 
+        // step1 账户初始化
         let api_key = Some("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx".into());
         let secret_key = Some("GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA".into());
-    
         let account: Account = Binance::new(api_key, secret_key);
-        
+
         let answer =   account.get_account().unwrap().balances;
       
         let mut usdt:f32 = 0.0;
@@ -70,6 +80,22 @@ impl Server {
         
             }
         }
+
+        //step2 本地账户初始化  本地状态同步器
+        let low_price = 2_f32;
+
+        
+        let high_price = 3_f32;
+        let grid_num = 20_i32 as f32;
+
+
+        // let order_status = Vec::new();
+        for i in 0..20{
+            
+                let price = (high_price - low_price)/grid_num + low_price;
+
+        }
+
 
         println!(" usdt is {:?}",usdt);
        

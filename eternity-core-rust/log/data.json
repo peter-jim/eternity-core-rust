@@ -1,0 +1,43 @@
+{
+  "binance": {
+    "api_key": "y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx",
+    "dexaddress": "  ",
+    "maxaccount": 10,
+    "model": [
+      "AIP",
+      "AIP30",
+      "AIP100",
+      "GRIDE"
+    ],
+    "secrect_key": "GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA",
+    "serveraddress": " ",
+    "version": "0.1"
+  },
+  "huobi": {
+    "address": "  ",
+    "api_key": "y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx",
+    "maxaccount": 200,
+    "model": [
+      "AIP",
+      "AIP30",
+      "AIP100",
+      " "
+    ],
+    "secrect_key": "GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA",
+    "version": "0"
+  },
+  "mexc": {
+    "address": "  ",
+    "api_key": "y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx",
+    "maxaccount": 200,
+    "model": [
+      "AIP",
+      "AIP30",
+      "AIP100",
+      " "
+    ],
+    "secrect_key": "GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA",
+    "version": "0"
+  },
+  "name": "eternity"
+}
