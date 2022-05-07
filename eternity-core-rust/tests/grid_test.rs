@@ -46,7 +46,7 @@ mod tests {
                 statusmap[i].side = "None".to_string();
                 break;
             }
-      }
+         }
 
           // 
           for i in 0..20{

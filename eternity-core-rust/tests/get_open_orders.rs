@@ -4,6 +4,7 @@ mod tests {
     use eternity_core_rust::market::*;
     use eternity_core_rust::api::*;
     use eternity_core_rust::account::*;
+    use eternity_core_rust::server::*;
     
     use std::io::BufWriter;
     use std::io::BufReader;
@@ -32,16 +33,28 @@ mod tests {
             {
                 let writer = BufWriter::new(File::create("./log/order.json").unwrap());
                 serde_json::to_writer_pretty(writer, &answer).unwrap();
+                
+                let mut orderlist = Vec::new();
 
                 for i in answer{
-                    println!("{:?}",&i   );
+                    //println!("{:?}",&i   );
                     // let writer = BufWriter::new(File::create("./log/order.json").unwrap());
                     // serde_json::to_writer_pretty(writer, &i).unwrap();
+                    let mut serder = OrderStatus{
+                    clientid:i.clone().client_order_id .to_string() ,
+                    price:i.clone().price.to_string(),
+                    origqty:i.clone().orig_qty.to_string(),
+                    status: i.clone().status.to_string(),// 用户设置的原始订单数量
+                    types: i.clone().type_name.to_string(),
+                    side: i.clone().side.to_string()
+                    };
+                    orderlist.push(serder);
+
                 }
 
-
-                
-                    
+                for i in orderlist{
+                    println!("{:?}",&i);
+                }          
                
             }
             
