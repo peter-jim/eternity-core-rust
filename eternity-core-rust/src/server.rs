@@ -15,7 +15,7 @@ pub struct Server{
     pub server_reciver:Receiver<String>,
     pub centrial_sender:Sender<String>,
 }
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct OrderStatus{
     pub clientid:String,// 客户自己设置的ID
     pub price:String,
@@ -23,6 +23,7 @@ pub struct OrderStatus{
     pub status: String,// 用户设置的原始订单数量
     pub types: String,
     pub side: String,
+    pub  compare: String,
 }
 pub fn inital_account() -> Account{
     let api_key = Some("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx".into());
@@ -81,6 +82,18 @@ impl Server {
         //获取交易所订单
         let answer  = account.get_open_orders("GLMRBUSD");
 
+        //获取市价
+        let market: Market = Binance::new(Option::Some(String::from("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx")),Option::Some(String::from("GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA")));
+        let result_price = market.get_price("GLMRBUSD");
+
+       
+        if result_price.is_ok(){
+            let  now_price = result_price.unwrap().price;
+
+            println!(" 现在GLMR BUSD 的市价是 {:?} ",now_price);
+        }
+        
+
         let mut orderlist = Vec::new();
         if answer.is_ok(){
             for i in answer.unwrap(){
@@ -94,14 +107,15 @@ impl Server {
                 origqty:i.clone().orig_qty.to_string(),
                 status: i.clone().status.to_string(),// 用户设置的原始订单数量
                 types: i.clone().type_name.to_string(),
-                side: i.clone().side.to_string()
+                side: i.clone().side.to_string(),
+                compare: "0".to_string(),
                 };
                 orderlist.push(serder);
             }   
              
-            for i in orderlist{
-                println!("{:?}",&i);
-            }  
+            // for i in orderlist{
+            //     println!("{:?}",&i);
+            // }  
         }
 
         let  usdt:f32 = 0.0;  
@@ -132,7 +146,8 @@ impl Server {
                   origqty:"100".to_string(),
                   status: "NEW".to_string(),// 用户设置的原始订单数量
                   types: "LIMIT".to_string(),
-                  side: "SELL".to_string()
+                  side: "SELL".to_string(),
+                  compare:"0".to_string()
               };
               statusmap.push(status);            
         }
@@ -157,6 +172,35 @@ impl Server {
         }
        
         
+        //网格 订单系统
+  
+        for i in 0..20{
+            for j in orderlist.clone(){
+                // step 1 如果 orderlist 没有 ，则代代表需要向交易所发送相关指令，如果有则不用更新。
+                   
+                if statusmap[i].clientid == j.clientid{
+                     statusmap[i].compare="1".to_string();  //1 代表交易所需要更新指令。
+                }
+            }
+        }
+        
+        // 向交易所发送 现价订单
+
+        for i in 0..20{
+
+            println!(" now price is {:?}",now_price);
+            
+            if statusmap[i].price.parse::<f32>().unwrap()  < now_price{
+                statusmap[i].side = "BUY".to_string()
+               }else {
+                statusmap[i].side = "SELL".to_string()
+               }
+               println!(" grid price is {:?}",statusmap[i].price.parse::<f32>().unwrap());
+            println!("{:?}",statusmap[i]);
+        }
+
+
+
 
 
 

@@ -29,7 +29,8 @@ mod tests {
                     origqty:"100".to_string(),
                     status: "NEW".to_string(),// 用户设置的原始订单数量
                     types: "LIMIT".to_string(),
-                    side: "SELL".to_string()
+                    side: "SELL".to_string(),
+                    compare:"0".to_string()
                 };
                 statusmap.push(status);            
           }

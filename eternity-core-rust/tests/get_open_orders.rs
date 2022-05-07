@@ -46,7 +46,8 @@ mod tests {
                     origqty:i.clone().orig_qty.to_string(),
                     status: i.clone().status.to_string(),// 用户设置的原始订单数量
                     types: i.clone().type_name.to_string(),
-                    side: i.clone().side.to_string()
+                    side: i.clone().side.to_string(),
+                    compare:"0".to_string()
                     };
                     orderlist.push(serder);
 
