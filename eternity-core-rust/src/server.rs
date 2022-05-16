@@ -3,6 +3,7 @@ use std::{thread::JoinHandle, sync::mpsc::Receiver,sync::mpsc::Sender};
 use crate::market::*;
 use crate::api::*;
 use crate::account::*;
+use crate::mpscanaly::*;
 
 
 
@@ -12,8 +13,8 @@ pub struct Server{
     pub threading: JoinHandle<()>,
     pub start_time: String,
     pub account:String,
-    pub server_reciver:Receiver<String>,
-    pub centrial_sender:Sender<String>,
+    pub server_reciver:Receiver<OptionCode>,
+    pub centrial_sender:Sender<OptionCode>,
 }
 #[derive(Debug,Clone)]
 pub struct OrderStatus{
@@ -25,6 +26,9 @@ pub struct OrderStatus{
     pub side: String,
     pub  compare: String,
 }
+
+
+
 pub fn inital_account() -> Account{
     let api_key = Some("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx".into());
     let secret_key = Some("GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA".into());
@@ -57,7 +61,7 @@ impl Server {
     }
 
 
-    pub fn AIP_30(server_reciver:Receiver<String>, server_sender:Sender<String>){
+    pub fn AIP_30(server_reciver:Receiver<OptionCode>, server_sender:Sender<OptionCode>){
        /*
        （Automatic Investment Plan every day,total 30days.
        */
@@ -82,19 +86,32 @@ impl Server {
         //获取交易所订单
         let answer  = account.get_open_orders("GLMRBUSD");
 
+        
+
+        loop {
+
+             // step1 账户初始化
+        let account = inital_account();
+
+
+        // 获取账户余额
+        let answer =   account.get_account().unwrap().balances;
+
+        //获取交易所订单
+        let answer  = account.get_open_orders("GLMRBUSD");
         //获取市价
         let market: Market = Binance::new(Option::Some(String::from("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx")),Option::Some(String::from("GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA")));
-        let result_price = market.get_price("GLMRBUSD");
-
-       
+        let result_price = market.get_price("GLMRBUSD");    
+        let mut now_price = 0.0;
         if result_price.is_ok(){
-            let  now_price = result_price.unwrap().price;
+            now_price = result_price.unwrap().price;
 
             println!(" 现在GLMR BUSD 的市价是 {:?} ",now_price);
         }
         
 
         let mut orderlist = Vec::new();
+
         if answer.is_ok(){
             for i in answer.unwrap(){
                 //println!("{:?}",&i   );
@@ -125,8 +142,8 @@ impl Server {
         let grid_num = 20_i32 as f32;
 
 
-        let low_price = 2.00_f32;
-        let high_price = 3.00_f32;
+        let low_price = 1.700_f32;
+        let high_price = 2.50_f32;
         let grid_num = 20_i32 as f32;
         let mut price = low_price.clone();  
         let mut statusmap = Vec::new();
@@ -141,9 +158,9 @@ impl Server {
               
             //   println!("pirce is {:?}",price);
               let status = OrderStatus{
-                  clientid:"grid_".to_string() ,
+                  clientid:"grid_".to_string() + &i.clone().to_string(),
                   price:price.clone().to_string(),
-                  origqty:"100".to_string(),
+                  origqty:"10".to_string(),
                   status: "NEW".to_string(),// 用户设置的原始订单数量
                   types: "LIMIT".to_string(),
                   side: "SELL".to_string(),
@@ -157,18 +174,6 @@ impl Server {
                   statusmap[i].side = "BUY".to_string();
               }
               // println!("{:?}",statusmap[i].price.parse::<f32>().unwrap());
-        }
-
-        for i in 0..20{
-          if statusmap[i].side != statusmap[i+1].side{
-              statusmap[i].side = "None".to_string();
-              break;
-          }
-       }
-
-        // 
-        for i in 0..20{
-              println!("{:?}",statusmap[i])
         }
        
         
@@ -185,49 +190,98 @@ impl Server {
         }
         
         // 向交易所发送 现价订单
-
         for i in 0..20{
-
-            println!(" now price is {:?}",now_price);
-            
-            if statusmap[i].price.parse::<f32>().unwrap()  < now_price{
+            // println!(" now price is {:?}",now_price);
+            if statusmap[i].price.parse::<f64>().unwrap()  < now_price{
                 statusmap[i].side = "BUY".to_string()
                }else {
                 statusmap[i].side = "SELL".to_string()
                }
-               println!(" grid price is {:?}",statusmap[i].price.parse::<f32>().unwrap());
+            //    println!(" grid price is {:?}",statusmap[i].price.parse::<f32>().unwrap());
             println!("{:?}",statusmap[i]);
         }
 
+       
+        for i in 0..20{
+            if statusmap[i].side != statusmap[i+1].side{
+                statusmap[i-1].side = "None".to_string();
+                break;
+            }
+         }
 
+        // 
+        for i in 0..20{
 
-
-
-
-        loop {
-            
-            let market: Market = Binance::new(Option::Some(String::from("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx")),Option::Some(String::from("GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA")));
-            // Latest price for ONE symbol
-            match market.get_price("BNBUSDT") {
-                Ok(answer) => println!("{:?}", answer),
-                Err(e) => println!("Error: {}", e),
+            if now_price <= statusmap[0].price.parse::<f64>().unwrap()  ||now_price >=2.50  {
+                break;
             }
 
-            std::thread::sleep(std::time::Duration::from_secs(1));
+            println!(" 开始下单 " );
+
+            if statusmap[i].compare =="0"   {
+                if statusmap[i].side == "BUY"{
+                    let result = account.limit_buy("GLMRBUSD", statusmap[i].origqty.parse::<f64>().unwrap(),statusmap[i].price.parse::<f64>().unwrap(),statusmap[i].clientid.to_string()).unwrap();
+                println!(" result is {:?} " , result);
+                }
+            }
+            println!("{:?}",statusmap[i])
+            }
+
+            std::thread::sleep(std::time::Duration::from_secs(3));
+
+
+            //对消息启动解析器 
+            server_sender.send(OptionCode::North).unwrap();
             println!(" 接收到消息 {:?} ",server_reciver.recv());
-            server_sender.send(String::from("hello center")).unwrap();
+
         }
 
 
+
+
+        // loop {
+            
+        //     let market: Market = Binance::new(Option::Some(String::from("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx")),Option::Some(String::from("GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA")));
+        //     // Latest price for ONE symbol
+        //     match market.get_price("BNBUSDT") {
+        //         Ok(answer) => println!("{:?}", answer),
+        //         Err(e) => println!("Error: {}", e),
+        //     }
+
+        //     std::thread::sleep(std::time::Duration::from_secs(1));
+        //     println!(" 接收到消息 {:?} ",server_reciver.recv());
+        //     server_sender.send(String::from("hello center")).unwrap();
+        // }
+
+        
+
+      
         
 
 
     }
 
 
-    fn crate_server(opt_code:String,api_key: Option<String>, secret_key: Option<String>){
-        
+   pub fn grid_glmr_20(server_reciver:Receiver<OptionCode>, server_sender:Sender<OptionCode>){
+
+    let optioncode = OptionCode::AipShoutdown;
+    let rev = server_reciver.recv().unwrap();
+    match rev{
+        OptionCode::AipShoutdown =>{
+            println!("xxx")
+        }
+        OptionCode::North =>{
+            println!("xxx")
+        }
+        OptionCode::South =>{
+            println!("xxx")
+        }
+        OptionCode::West =>{
+            println!("xxx")
+        }
     }
+
+   }
    
 }
 

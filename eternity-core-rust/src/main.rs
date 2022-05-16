@@ -3,6 +3,7 @@ use eternity_core_rust::api::*;
 use eternity_core_rust::market::*;
 use eternity_core_rust::account::*;
 use eternity_core_rust::server::*;
+use eternity_core_rust::mpscanaly::*;
 use std::sync::mpsc::channel;
 use std::thread;
 use std::fs::File;
@@ -75,11 +76,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         
 
         //发送消息
-        stack[0].centrial_sender.send(String::from("sxxx"));
+        stack[0].centrial_sender.send(OptionCode::North);
 
         loop {
            //发送消息
-             stack[0].centrial_sender.send(String::from("sxxx")); 
+             stack[0].centrial_sender.send(OptionCode::AipShoutdown); 
              std::thread::sleep(std::time::Duration::from_secs(3));
 
              println!("{:?} 主程序消息   ",stack[0].server_reciver.recv() )

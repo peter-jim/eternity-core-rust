@@ -12,7 +12,7 @@ mod tests {
     
         let account: Account = Binance::new(api_key, secret_key);
         
-        let result = account.limit_buy("GLMRBUSD", 15,1.0).unwrap();
+        let result = account.limit_buy("GLMRBUSD", 15,1.0,"glmrtest".to_string()).unwrap();
         println!(" result is xxxx");
         println!(" result is {:?} " , result);
         
