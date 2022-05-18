@@ -4,7 +4,7 @@ use crate::market::*;
 use crate::api::*;
 use crate::account::*;
 use crate::mpscanaly::*;
-use std::collections::HashMap;
+
 
 
 
@@ -37,16 +37,7 @@ pub fn inital_account() -> Account{
     account
 }
 
-pub async fn get() -> Result<HashMap<String, String>, reqwest::Error>{
-    Ok(reqwest::get("https://httpbin.org/ip").await?.json::<HashMap<String, String>>().await?)
-    
-}
 
-pub async fn server_get(){
-    if let Ok(resp) = get().await {
-        println!("{:#?}", resp);
-    }
-}
 
 pub fn post_ser(){}
 
