@@ -12,7 +12,7 @@ mod tests {
     use std::sync::mpsc::Sender ;
     use std::fs::File;
     use std::io::BufWriter;
-use std::io::BufReader;
+    use std::io::BufReader;
     extern crate serde;
 extern crate serde_json;
 

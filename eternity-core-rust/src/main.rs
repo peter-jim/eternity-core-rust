@@ -19,29 +19,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("{:?}", v["name"].as_str().unwrap());
     println!("{:?}", v["binance"]["model"]);
 
-    // let market: Market = Binance::new(Option::Some(String::from("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx")),Option::Some(String::from("GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA")));
-    //   // Latest price for ONE symbol
-    //   match market.get_price("BNBUSDT") {
-    //     Ok(answer) => println!("{:?}", answer),
-    //     Err(e) => println!("Error: {}", e),
-    // }
 
-    // let account:Account =  Binance::new(Option::Some(String::from("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx")),Option::Some(String::from("GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA")));
-
-    //   match account.get_account() {
-    //     Ok(answer) => println!("{:?}", answer),
-    //     Err(e) => println!("Error: {}", e),
-    // }
+  
 
     //step 0 . 初始化
-
     let mut stack = Vec::new();
 
     //step 1. 线程 event-->  监听器监听moonbeam网络事件
 
-
-    
-    
     //step 2. 轮训本机是否有对应服务。
 
     let web3_event_usdt = String::from("100");
@@ -58,7 +43,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         let (server_sender,centrial_reciver)  = channel();
 
         let controler  =  thread::spawn(move||
-          Server::AIP_30(server_reciver, server_sender )
+          // Server::AIP_30(server_reciver, server_sender )
+          Server::AIP_30(server_reciver, server_sender)
+
         );
 
         let server =  Server{
@@ -76,11 +63,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         
 
         //发送消息
-        stack[0].centrial_sender.send(OptionCode::North);
+        stack[0].centrial_sender.send(OptionCode::Shoutdown);
 
         loop {
            //发送消息
-             stack[0].centrial_sender.send(OptionCode::AipShoutdown); 
+             stack[0].centrial_sender.send(OptionCode::ErrorStatus); 
              std::thread::sleep(std::time::Duration::from_secs(3));
 
              println!("{:?} 主程序消息   ",stack[0].server_reciver.recv() )
@@ -116,12 +103,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 
 
-    // let client = Client::new();
-    // let resp = client.get("https://api2.binance.com/api/v3/ticker/price?symbol=BNBUSDT").send()?;
-    // println!("Got {:?}", resp);
-
-
-
 }
+
 
 

@@ -7,7 +7,10 @@
         "version":"0.1",
         "api_key":"y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx",
         "secrect_key":"GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA",
-        "model":["AIP","AIP30","AIP100"," "],
+        "model":{
+            "AIP":[20,10,20,20],
+            "AIP30":[100,199]
+        },
         "maxaccount":10
     },
     "mexc":{
@@ -25,7 +28,13 @@
         "secrect_key":"GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA",
         "model":["AIP","AIP30","AIP100"," "],
         "maxaccount":200
+    },
+    "webserver":{
+        "IP":"www.eternitylab.cn",
+        "port":"5000"
     }
 
+
+    
 
 }

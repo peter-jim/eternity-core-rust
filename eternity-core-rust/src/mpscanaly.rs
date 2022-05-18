@@ -1,19 +1,22 @@
+
+
 #[derive(Debug)]
 pub enum OptionCode {
-    AipShoutdown,
-    West,
-    North,
-    South,
+    Shoutdown,
+    ErrorStatus,
+    AllOrder,
+    AllBalance,
 }
 
 impl OptionCode {
     
-    pub fn get_open_orders(){
+    pub fn get_open_orders(&self){
 
-        println!("xx");
-
+        
 
     }
+
+
 
 
 }

@@ -4,6 +4,7 @@ use crate::market::*;
 use crate::api::*;
 use crate::account::*;
 use crate::mpscanaly::*;
+use std::collections::HashMap;
 
 
 
@@ -35,6 +36,20 @@ pub fn inital_account() -> Account{
     let account: Account = Binance::new(api_key, secret_key);
     account
 }
+
+pub async fn get() -> Result<HashMap<String, String>, reqwest::Error>{
+    Ok(reqwest::get("https://httpbin.org/ip").await?.json::<HashMap<String, String>>().await?)
+    
+}
+
+pub async fn server_get(){
+    if let Ok(resp) = get().await {
+        println!("{:#?}", resp);
+    }
+}
+
+pub fn post_ser(){}
+
 
 impl Server {
 
@@ -231,7 +246,7 @@ impl Server {
 
 
             //对消息启动解析器 
-            server_sender.send(OptionCode::North).unwrap();
+            server_sender.send(OptionCode::AllBalance).unwrap();
             println!(" 接收到消息 {:?} ",server_reciver.recv());
 
         }
@@ -262,27 +277,43 @@ impl Server {
     }
 
 
-   pub fn grid_glmr_20(server_reciver:Receiver<OptionCode>, server_sender:Sender<OptionCode>){
+    pub fn grid_glmr_20(server_reciver:Receiver<OptionCode>, server_sender:Sender<OptionCode>){
 
-    let optioncode = OptionCode::AipShoutdown;
-    let rev = server_reciver.recv().unwrap();
-    match rev{
-        OptionCode::AipShoutdown =>{
-            println!("xxx")
+        let optioncode = OptionCode::Shoutdown;
+        let rev = server_reciver.recv().unwrap();
+        match rev{
+            OptionCode::Shoutdown =>{
+                optioncode.get_open_orders();
+                //取消所有的订单
+
+                //检查所有的订单是否取消
+
+                //如果因为网络问题，没有取消则继续取消。
+
+                //3次发送 网络错误
+            }
+            OptionCode::AllBalance =>{
+                println!("xxx");
+                
+                //获取账户余额
+
+                //通过send发送回去
+            }
+            OptionCode::AllOrder =>{
+                println!("xxx")
+                   //获取账户订单
+                   
+
+                //通过send发送回去
+            }
+            OptionCode::ErrorStatus =>{
+                println!("xxx")
+                //返回ErrorStatus列表
+            }
         }
-        OptionCode::North =>{
-            println!("xxx")
-        }
-        OptionCode::South =>{
-            println!("xxx")
-        }
-        OptionCode::West =>{
-            println!("xxx")
-        }
-    }
 
    }
-   
+
 }
 
     
