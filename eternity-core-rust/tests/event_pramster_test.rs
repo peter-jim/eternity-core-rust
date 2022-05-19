@@ -76,17 +76,30 @@ mod tests {
 
             if web3_event_model == i.0.clone(){
                 println!("we have server");
+
+                
+                let event =  EventInfo{
+                    web3_event_usdt : String::from("100"),
+                     web3_event_model : String::from("AIP30"),
+                     web3_event_dexaddress : String::from("binance"),
+                     web3_event_useraddress : String::from("0x123"),
+                     web3_event_serveraddress : String::from("0xabc123")
+                };
+                return event
+
             }
         }
 
-            EventInfo{
+       
+
+        let event =  EventInfo{
             web3_event_usdt : String::from("100"),
              web3_event_model : String::from("AIP30"),
              web3_event_dexaddress : String::from("binance"),
              web3_event_useraddress : String::from("0x123"),
              web3_event_serveraddress : String::from("0xabc123")
-        }
-
+        };
+        return  event
 
 
      }
