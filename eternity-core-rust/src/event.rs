@@ -7,12 +7,19 @@ pub enum EventCode{
 
 }
 
+#[derive(Debug)]
+pub struct  Event{
+    pub balance: f32,
+    pub blocknumber: i32,
+    pub dexaddress: String,
+    pub model: String,
+    pub serveraddress: String,
+    pub tracnsactionhash: String,
+    pub useraddress: String
 
-fn a(){
-    let b = EventCode::Withdraw{name:"AIP",address:"0x123",serveraddress:"0xabc123"};
-    
-    
 }
+
+
 
 
 

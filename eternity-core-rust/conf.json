@@ -5,7 +5,7 @@
     "binance":{
         
         "dexaddress":"  ",
-        "serveraddress":" ",
+        "serveraddress":"serveraddress test",
         "version":"0.1",
         "api_key":"y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx",
         "secrect_key":"GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA",

@@ -15,12 +15,8 @@ mod tests {
         let response = client.get("http://127.0.0.1:5000/update").send().ok();
         // println!("{:#?}",&response.unwrap().json::<serde_json::Value>().ok());  
 
-
         let model_json = response.unwrap().json::<serde_json::Value>().unwrap();
         println!("{:?}",model_json["binance"])
-      
-
-        
 
     }
 

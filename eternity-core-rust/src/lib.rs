@@ -19,3 +19,4 @@ pub mod config;
 pub mod account;
 pub mod server;
 pub mod mpscanaly;
+pub mod event;
