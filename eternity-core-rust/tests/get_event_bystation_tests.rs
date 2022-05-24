@@ -38,13 +38,14 @@ mod tests {
     //   println!("{:?}",response.unwrap().text());
        
     //    println!("{:?}",&response.unwrap().json::<serde_json::Value>().unwrap());
-       let mut array = response.unwrap().json::<serde_json::Value>().unwrap().as_array().unwrap().clone();
-
+    //    let mut array = response.unwrap().json::<serde_json::Value>().unwrap().as_array().unwrap().clone();
+       let mut array = response.unwrap().json::<serde_json::Value>().unwrap().clone();
        
    
+       println!("{:?}",array);
 
        for i in 0..4{
-            println!("{:?}",array.get(i).unwrap()[""]);
+            println!("{:?}",array.get(i).unwrap()["balance"].as_f64().unwrap());
        }
        
 
