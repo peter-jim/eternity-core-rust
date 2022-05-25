@@ -16,10 +16,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     loop {
         updata_conf();
         let event = get_pending();
-        // let id = creat_server(event);
+        let id = creat_server(event);
         println!(" loop ");
 
-        std::thread::sleep(std::time::Duration::from_secs(3));
+        std::thread::sleep(std::time::Duration::from_secs(5));
     }
 
     Ok(())
@@ -51,7 +51,6 @@ fn updata_event_by_station(serveraddress: Value) {
         .as_array()
         .unwrap()
         .clone();
-    println!("pending is {:?}", arrary_pending);
 
     #[derive(Serialize)]
     struct Event<'a> {
@@ -73,7 +72,7 @@ fn updata_event_by_station(serveraddress: Value) {
         })
         .send();
     println!(" get response status is  {:?}", response.is_ok());
-
+    
     if response.is_ok() == true {
         let response = response.ok();
 
@@ -85,6 +84,35 @@ fn updata_event_by_station(serveraddress: Value) {
             .unwrap()
             .clone();
 
+        let mut array_event = Vec::new();
+
+        for i in 0..array.len() {
+            let e = eternity_core_rust::event::Event {
+                balance: array[i]["balance"].as_f64().unwrap() as f32,
+                blocknumber: array[i]["blocknumber"].as_f64().unwrap() as i32,
+                dexaddress: array[i]["dexaddress"]
+                    .as_str()
+                    .unwrap()
+                    .to_string(),
+                model: array[i]["model"].as_str().unwrap().to_string(),
+                serveraddress: array[i]["serveraddress"]
+                    .as_str()
+                    .unwrap()
+                    .to_string(),
+                tracnsactionhash: array[i]["transactionHash"]
+                    .as_str()
+                    .unwrap()
+                    .to_string(),
+                useraddress: array[i]["useraddress"]
+                    .as_str()
+                    .unwrap()
+                    .to_string(),
+                cheakcode: true,
+            };
+
+            array_event.push(e);
+        }
+
         println!("array is   {:?}", array.len());
         println!(
             "array transactionHash is   {:?}",
@@ -93,10 +121,12 @@ fn updata_event_by_station(serveraddress: Value) {
 
         //array must not in finish , pending anding running. If
         for i in 0..array.clone().len() {
-            for j in 0..arrary_finish.len() {
+            for j in 0..arrary_finish.clone().len() {
+                println!("arrary finish is {:?}", arrary_finish[j]["transactionHash"]);
                 if array[i]["transactionHash"] == arrary_finish[j]["transactionHash"] {
                     // array.remove(i);
-                    repeate_array.push(array[i]["transactionHash"].clone());
+                    println!("在finish 中发现1个重复");
+                    repeate_array.push(array[i].clone());
                 }
             }
         }
@@ -105,7 +135,8 @@ fn updata_event_by_station(serveraddress: Value) {
         for i in 0..array.clone().len() {
             for j in 0..arrary_running.len() {
                 if array[i]["transactionHash"] == arrary_running[j]["transactionHash"] {
-                    repeate_array.push(array[i]["transactionHash"].clone());
+                    println!("在runing 中发现1个重复");
+                    repeate_array.push(array[i].clone());
                 }
             }
         }
@@ -115,38 +146,48 @@ fn updata_event_by_station(serveraddress: Value) {
 
         //find a bug if
         for i in 0..array.clone().len() {
-            // println!(" array in for is {:?}", &array.len());
+            //  println!(" array in for is {:?}", array[i]["transactionHash"]);
             for j in 0..arrary_pending.clone().len() {
-            
-
+                // println!(" repeate in for is {:?}", arrary_pending[j]["transactionHash"]);
                 if array[i]["transactionHash"] == arrary_pending[j]["transactionHash"] {
-
-                    repeate_array.push(array[i]["transactionHash"].clone());
+                    // println!("在 pending中发现1个重复 {:?}" , array[i]["transactionHash"] );
+                    repeate_array.push(array[i].clone());
+                   
                 }
             }
         }
 
         //
-        for i in 0..repeate_array.clone().len(){
-            for j in 0..array.len(){
-                if repeate_array[i]["transactionHash"] == array[j]["transactionHash"]{
-                    array.remove(j);
+        for i in 0..repeate_array.clone().len() {
+            for j in 0..array.len() {
+                // println!("xx repeate_array 是{:?}",repeate_array[i]["transactionHash"]);
+                //     println!("xx array 是{:?}",array[j]["transactionHash"]);
+                if repeate_array[i]["transactionHash"] == array[j]["transactionHash"] {
+                    // println!("在 repeated 和 array 中发现一个重复");
+                    // println!("repeate_array 是{:?}",repeate_array[i]["transactionHash"]);
+                    println!("array 剩 {:?}", array);
+                    // array.remove(j);
+                    array_event[j].cheakcode = false;
                 }
             }
         }
 
-        println!(" 没有重复的数据有 {:?} ",array.len() );
+        println!("重复的数据有{:?} 个", repeate_array.len());
 
-        if array.len() !=0 {
-            arrary_pending.push(array[0].clone());
+        if array.len() != 0 {
+            for i in 0..array_event.len() {
+
+                if array_event[i].cheakcode == true{
+                    arrary_pending.push(array[i].clone());
+                }
+            }
 
             // write out the file
             let writer = BufWriter::new(File::create("./storage/pending.json").unwrap());
             serde_json::to_writer_pretty(writer, &arrary_pending).unwrap();
-        }else {
+        } else {
             println!("不需要更新")
         }
-        
     } else {
         println!("network error");
     }
@@ -215,6 +256,7 @@ pub fn get_pending() -> Event {
             .as_str()
             .unwrap()
             .to_string(),
+        cheakcode:true
     };
 
     return event;

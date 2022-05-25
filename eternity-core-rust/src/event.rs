@@ -15,7 +15,8 @@ pub struct  Event{
     pub model: String,
     pub serveraddress: String,
     pub tracnsactionhash: String,
-    pub useraddress: String
+    pub useraddress: String,
+    pub cheakcode: bool,
 
 }
 
