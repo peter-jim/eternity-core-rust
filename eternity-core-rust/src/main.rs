@@ -9,17 +9,25 @@ use serde_json::Value;
 use std::error::Error;
 use std::fs::File;
 use std::io::BufWriter;
+use std::sync::mpsc::Receiver;
+use std::sync::mpsc::Sender;
 use std::sync::mpsc::channel;
 use std::thread;
 
 fn main() -> Result<(), Box<dyn Error>> {
     loop {
         updata_conf();
-        let event = get_pending();
-        let id = creat_server(event);
-        println!(" loop ");
+        let event_result = get_pending();
 
-        std::thread::sleep(std::time::Duration::from_secs(5));
+        if event_result.is_ok(){
+            let event = event_result.ok().unwrap();
+            let id = creat_server(event);
+            println!(" loop ");
+        }else {
+            println!("没有新业务");
+        }
+
+        std::thread::sleep(std::time::Duration::from_secs(10));
     }
 
     Ok(())
@@ -72,14 +80,17 @@ fn updata_event_by_station(serveraddress: Value) {
         })
         .send();
     println!(" get response status is  {:?}", response.is_ok());
-    
+
     if response.is_ok() == true {
         let response = response.ok();
 
-        let mut array = response
+        let mut array_result = response
             .unwrap()
-            .json::<serde_json::Value>()
-            .unwrap()
+            .json::<serde_json::Value>();
+           
+
+        if array_result.is_ok(){
+            let mut array = array_result.unwrap()
             .as_array()
             .unwrap()
             .clone();
@@ -90,23 +101,11 @@ fn updata_event_by_station(serveraddress: Value) {
             let e = eternity_core_rust::event::Event {
                 balance: array[i]["balance"].as_f64().unwrap() as f32,
                 blocknumber: array[i]["blocknumber"].as_f64().unwrap() as i32,
-                dexaddress: array[i]["dexaddress"]
-                    .as_str()
-                    .unwrap()
-                    .to_string(),
+                dexaddress: array[i]["dexaddress"].as_str().unwrap().to_string(),
                 model: array[i]["model"].as_str().unwrap().to_string(),
-                serveraddress: array[i]["serveraddress"]
-                    .as_str()
-                    .unwrap()
-                    .to_string(),
-                tracnsactionhash: array[i]["transactionHash"]
-                    .as_str()
-                    .unwrap()
-                    .to_string(),
-                useraddress: array[i]["useraddress"]
-                    .as_str()
-                    .unwrap()
-                    .to_string(),
+                serveraddress: array[i]["serveraddress"].as_str().unwrap().to_string(),
+                transactionhash: array[i]["transactionHash"].as_str().unwrap().to_string(),
+                useraddress: array[i]["useraddress"].as_str().unwrap().to_string(),
                 cheakcode: true,
             };
 
@@ -152,7 +151,6 @@ fn updata_event_by_station(serveraddress: Value) {
                 if array[i]["transactionHash"] == arrary_pending[j]["transactionHash"] {
                     // println!("在 pending中发现1个重复 {:?}" , array[i]["transactionHash"] );
                     repeate_array.push(array[i].clone());
-                   
                 }
             }
         }
@@ -165,7 +163,7 @@ fn updata_event_by_station(serveraddress: Value) {
                 if repeate_array[i]["transactionHash"] == array[j]["transactionHash"] {
                     // println!("在 repeated 和 array 中发现一个重复");
                     // println!("repeate_array 是{:?}",repeate_array[i]["transactionHash"]);
-                    println!("array 剩 {:?}", array);
+                    // println!("array 剩 {:?}", array);
                     // array.remove(j);
                     array_event[j].cheakcode = false;
                 }
@@ -176,8 +174,7 @@ fn updata_event_by_station(serveraddress: Value) {
 
         if array.len() != 0 {
             for i in 0..array_event.len() {
-
-                if array_event[i].cheakcode == true{
+                if array_event[i].cheakcode == true {
                     arrary_pending.push(array[i].clone());
                 }
             }
@@ -188,12 +185,17 @@ fn updata_event_by_station(serveraddress: Value) {
         } else {
             println!("不需要更新")
         }
+        }else {
+            println!(" 网络错误,无法连接到监听节点 ");
+        }
+
+
     } else {
         println!("network error");
     }
 }
 
-pub fn get_pending() -> Event {
+pub fn get_pending() -> Result<Event,String>  {
     let f_pending = File::open("./storage/pending.json").unwrap();
     let f_finish = File::open("./storage/finish.json").unwrap();
     let f_running = File::open("./storage/running.json").unwrap();
@@ -234,70 +236,55 @@ pub fn get_pending() -> Event {
         }
     }
 
-    println!("array pending balance {:?} ", arrary_pending[0]["balance"]);
+   
 
-    let event = Event {
-        balance: arrary_pending[0]["balance"].as_f64().unwrap() as f32,
-        blocknumber: arrary_pending[0]["blocknumber"].as_f64().unwrap() as i32,
-        dexaddress: arrary_pending[0]["dexaddress"]
-            .as_str()
-            .unwrap()
-            .to_string(),
-        model: arrary_pending[0]["model"].as_str().unwrap().to_string(),
-        serveraddress: arrary_pending[0]["serveraddress"]
-            .as_str()
-            .unwrap()
-            .to_string(),
-        tracnsactionhash: arrary_pending[0]["transactionHash"]
-            .as_str()
-            .unwrap()
-            .to_string(),
-        useraddress: arrary_pending[0]["useraddress"]
-            .as_str()
-            .unwrap()
-            .to_string(),
-        cheakcode:true
-    };
+    if arrary_pending.len() != 0{
+        println!("array pending balance {:?} ", arrary_pending[0]["balance"]);
+        let event = Event {
+            balance: arrary_pending[0]["balance"].as_f64().unwrap() as f32,
+            blocknumber: arrary_pending[0]["blocknumber"].as_f64().unwrap() as i32,
+            dexaddress: arrary_pending[0]["dexaddress"]
+                .as_str()
+                .unwrap()
+                .to_string(),
+            model: arrary_pending[0]["model"].as_str().unwrap().to_string(),
+            serveraddress: arrary_pending[0]["serveraddress"]
+                .as_str()
+                .unwrap()
+                .to_string(),
+            transactionhash: arrary_pending[0]["transactionHash"]
+                .as_str()
+                .unwrap()
+                .to_string(),
+            useraddress: arrary_pending[0]["useraddress"]
+                .as_str()
+                .unwrap()
+                .to_string(),
+            cheakcode: true,
+        }; 
+        return Result::Ok(event);
+    }
+    
 
-    return event;
+    return Result::Err("no pending".to_string());
 }
 
 pub fn creat_server(event: Event) -> Server {
-    let web3_event_usdt = event.balance;
-    let web3_event_model = event.model;
-    let web3_event_dexaddress = event.dexaddress;
-    let web3_event_useraddress = event.useraddress;
-    let web3_event_serveraddress = event.serveraddress;
+    // let web3_event_usdt = event.balance;
+    // let web3_event_model = event.model;
+    // let web3_event_dexaddress = event.dexaddress;
+    // let web3_event_useraddress = event.useraddress;
+    // let web3_event_serveraddress = event.serveraddress;
 
+    let (centrial_sender, server_reciver) = channel();
+    let (server_sender, centrial_reciver) = channel();
     //update function just need to modify here
-    if web3_event_model == "AIP30" {
-        let (centrial_sender, server_reciver) = channel();
-        let (server_sender, centrial_reciver) = channel();
-        let controler = thread::spawn(move || Server::AIP_30(server_reciver, server_sender));
-        let server = Server {
-            quant_id: 1,
-            threading: controler,
-            start_time: "2021".to_string(),
-            account: "web3_event_useraddress".to_string(),
-
-            server_reciver: centrial_reciver,
-            centrial_sender: centrial_sender,
-        };
-        return server;
+    if event.model == "AIP" {
+        let controler = thread::spawn(move || Server::AIP(server_reciver, server_sender));
+        build_server(event, centrial_sender, centrial_reciver, controler)
     } else {
-        let (centrial_sender, server_reciver) = channel();
-        let (server_sender, centrial_reciver) = channel();
         let controler = thread::spawn(move || Server::AIP_30(server_reciver, server_sender));
-        let server = Server {
-            quant_id: 1,
-            threading: controler,
-            start_time: "2021".to_string(),
-            account: "web3_event_useraddress".to_string(),
-
-            server_reciver: centrial_reciver,
-            centrial_sender: centrial_sender,
-        };
-        return server;
+        build_server(event, centrial_sender, centrial_reciver, controler)
     }
 }
 
@@ -331,3 +318,56 @@ fn updat_option_by_station() {
 fn get_option_code() {}
 
 fn send_option_code_to_server() {}
+
+fn build_server(event: Event,centrial_sender:Sender<OptionCode>,centrial_reciver:Receiver<OptionCode>,controler:thread::JoinHandle<()>)->Server{
+    let event_cheak = event.clone();
+
+    let server = Server {
+        threading: controler,
+        server_reciver: centrial_reciver,
+        centrial_sender: centrial_sender,
+        balance: event.balance,
+        dexaddress: event.dexaddress,
+        model: event.model,
+        serveraddress: event.serveraddress,
+        transactionhash: event.transactionhash,
+        useraddress: event.useraddress,
+    };
+
+    
+
+    let f_pending = File::open("./storage/pending.json").unwrap();
+    let f_running = File::open("./storage/running.json").unwrap();
+
+    let v_pending: serde_json::Value = serde_json::from_reader(f_pending).unwrap();
+    let v_running: serde_json::Value = serde_json::from_reader(f_running).unwrap();
+
+    let mut arrary_pending = v_pending.as_array().unwrap().clone();
+    let mut arrary_running = v_running.as_array().unwrap().clone();
+
+    println!("更新 pending 到running");
+    //更新running 和 pending
+    for i in 0..arrary_pending.len(){
+        println!("event_cheak.transactionhash {:?}" ,event_cheak.transactionhash );
+
+        println!("array pending  transactionhash {:?}" ,arrary_pending[i]["transactionHash"] );
+        if event_cheak.transactionhash == arrary_pending[i]["transactionHash"]{
+          //移除
+
+            println!("更新 pending 到running");
+            arrary_running.push(arrary_pending[i].clone());
+            arrary_pending.remove(i);
+
+            let writer = BufWriter::new(File::create("./storage/running.json").unwrap());
+            serde_json::to_writer_pretty(writer, &arrary_running).unwrap();
+
+            let writer = BufWriter::new(File::create("./storage/pending.json").unwrap());
+            serde_json::to_writer_pretty(writer, &arrary_pending).unwrap();
+
+            break;
+        }
+    }
+
+
+    return server;
+}

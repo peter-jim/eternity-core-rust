@@ -10,12 +10,19 @@ use crate::mpscanaly::*;
 
 #[derive(Debug)]
 pub struct Server{
-    pub quant_id:usize,
+    
     pub threading: JoinHandle<()>,
-    pub start_time: String,
-    pub account:String,
     pub server_reciver:Receiver<OptionCode>,
     pub centrial_sender:Sender<OptionCode>,
+
+    pub balance: f32,
+    pub dexaddress: String,
+    pub model: String,
+    pub serveraddress: String,
+    pub transactionhash: String,
+    pub useraddress: String,
+
+
 }
 #[derive(Debug,Clone)]
 pub struct OrderStatus{
@@ -64,6 +71,10 @@ impl Server {
         Ok(answer) => println!("{:?}", answer),
         Err(e) => println!("Error: {}", e),
      }
+    }
+
+    pub fn AIP(server_reciver:Receiver<OptionCode>, server_sender:Sender<OptionCode>){
+        println!("启动线程 AIP");
     }
 
 
