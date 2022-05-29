@@ -14,7 +14,8 @@ use std::sync::mpsc::Sender;
 use std::sync::mpsc::channel;
 use std::thread;
 
-fn main() -> Result<(), Box<dyn Error>> {
+
+ fn main() -> Result<(), Box<dyn Error>> {
     loop {
         updata_conf();
         let event_result = get_pending();
@@ -371,3 +372,5 @@ fn build_server(event: Event,centrial_sender:Sender<OptionCode>,centrial_reciver
 
     return server;
 }
+
+
