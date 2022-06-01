@@ -28,6 +28,10 @@ use std::thread;
             println!("没有新业务");
         }
 
+        // 获取操作码，1.提现
+        let op_code =  get_option_code(); 
+
+
         std::thread::sleep(std::time::Duration::from_secs(10));
     }
 
@@ -40,6 +44,7 @@ fn updata_conf() {
     let v: serde_json::Value = serde_json::from_reader(f).unwrap();
     let serveraddress = v["binance"]["serveraddress"].clone();
     updata_event_by_station(serveraddress);
+
 }
 
 fn updata_event_by_station(serveraddress: Value) {
@@ -289,36 +294,50 @@ pub fn creat_server(event: Event) -> Server {
     }
 }
 
-fn updat_option_by_station() {
+fn updat_option_by_station(serveraddress: Value) {
+    println!(" get option by station");
+    let f_op_pending = File::open("./storage/op_pending.json").unwrap();
+    let f_po_finish = File::open("./storage/op_finish.json").unwrap();
 
-    //   let client = reqwest::blocking::Client::builder()
-    //   .pool_idle_timeout(None)
-    //   .build()
-    //   .unwrap();
+    let v_op_pending: serde_json::Value = serde_json::from_reader(f_op_pending).unwrap();
+    let v_op_finish: serde_json::Value = serde_json::from_reader(f_po_finish).unwrap();
 
-    //   let response = client
-    //         .get("http://127.0.0.1:5000/chaindata")
-    //         .json(&EventCode {
-    //             nodeaddress: serveraddress.as_str().unwrap(),
-    //             body: "json",
-    //         })
-    //         .send()
-    //         .ok();
+    let mut arrary_op_pending = v_op_pending.as_array().unwrap().clone();
+    let mut arrary_op_finish = v_op_finish.as_array().unwrap().clone();
 
-    //发送消息
-    //  stack[0].centrial_sender.send(OptionCode::Shoutdown);
+    let client = reqwest::blocking::Client::builder()
+    .pool_idle_timeout(None)
+    .build()
+    .unwrap();
 
-    //  loop {
-    //      //发送消息
-    //      stack[0].centrial_sender.send(OptionCode::ErrorStatus);
-    //      std::thread::sleep(std::time::Duration::from_secs(3));
+    #[derive(Serialize)]
+    struct Node<'a> {
+        nodeaddress: &'a str,
+        body: &'a str,
+    }
+    
+    println!(" ready to get chain event data  ");
+    let response = client
+        .get("http://127.0.0.1:5000/chaindata")
+        .json(&Node  {
+            nodeaddress: serveraddress.as_str().unwrap(),
+            body: "json",
+        })
+        .send();
 
-    //      println!("{:?} 主程序消息   ", stack[0].server_reciver.recv())}
+    println!(" get response status is  {:?}", response.is_ok());
+
 }
 
-fn get_option_code() {}
+fn get_option_code() {
 
-fn send_option_code_to_server() {}
+
+}
+
+fn send_option_code_to_server() {
+
+
+}
 
 fn build_server(event: Event,centrial_sender:Sender<OptionCode>,centrial_reciver:Receiver<OptionCode>,controler:thread::JoinHandle<()>)->Server{
     let event_cheak = event.clone();

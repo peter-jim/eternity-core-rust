@@ -75,6 +75,11 @@ impl Server {
 
     pub fn AIP(server_reciver:Receiver<OptionCode>, server_sender:Sender<OptionCode>){
         println!("启动线程 AIP");
+
+
+        
+
+
     }
 
 
@@ -252,28 +257,6 @@ impl Server {
             println!(" 接收到消息 {:?} ",server_reciver.recv());
 
         }
-
-
-
-
-        // loop {
-            
-        //     let market: Market = Binance::new(Option::Some(String::from("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx")),Option::Some(String::from("GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA")));
-        //     // Latest price for ONE symbol
-        //     match market.get_price("BNBUSDT") {
-        //         Ok(answer) => println!("{:?}", answer),
-        //         Err(e) => println!("Error: {}", e),
-        //     }
-
-        //     std::thread::sleep(std::time::Duration::from_secs(1));
-        //     println!(" 接收到消息 {:?} ",server_reciver.recv());
-        //     server_sender.send(String::from("hello center")).unwrap();
-        // }
-
-        
-
-      
-        
 
 
     }
