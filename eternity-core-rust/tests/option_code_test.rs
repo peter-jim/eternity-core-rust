@@ -23,13 +23,23 @@ mod tests {
         .build()
         .unwrap();
  
-        let response = client.get("http://127.0.0.1:5000/chaindata").json(&Node{
+        let response = client.get("http://127.0.0.1:5000/option").json(&Node{
          nodeaddress: "rust",
          body: "json",
         }).send().ok();
 
 
         println!(" get response status is  {:?}", response);
+        let mut array = response.unwrap().json::<serde_json::Value>().unwrap().clone();
+       
+   
+        println!("{:?}",array);
+ 
+        for i in 0..array.as_array().unwrap().len(){
+             println!("{:?}",array.get(i));
+        }
+
+
 
     }
 
