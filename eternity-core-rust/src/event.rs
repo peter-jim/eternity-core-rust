@@ -17,9 +17,19 @@ pub struct  Event{
     pub transactionhash: String,
     pub useraddress: String,
     pub cheakcode: bool,
-
 }
 
+
+#[derive(Debug,Clone)]
+pub struct  ChainOption{
+    pub blocknumber: i32,
+    // pub dexaddress: String,
+    pub model: String,
+    pub serveraddress: String,
+    pub transactionhash: String,
+    pub useraddress: String,
+    pub cheakcode: bool,
+}
 
 
 

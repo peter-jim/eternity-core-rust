@@ -329,10 +329,11 @@ fn updat_option_by_station(serveraddress: Value) {
             let mut array_event = Vec::new();
 
             for i in 0..array.len() {
-                let e = eternity_core_rust::event::Event {
-                    balance: array[i]["balance"].as_f64().unwrap() as f32,
+
+                println!(" option {:?}",array[i]["transactionHash"]);
+                let e = eternity_core_rust::event::ChainOption {
                     blocknumber: array[i]["blocknumber"].as_f64().unwrap() as i32,
-                    dexaddress: array[i]["dexaddress"].as_str().unwrap().to_string(),
+                    // dexaddress: array[i]["dexaddress"].as_str().unwrap().to_string(),
                     model: array[i]["model"].as_str().unwrap().to_string(),
                     serveraddress: array[i]["serveraddress"].as_str().unwrap().to_string(),
                     transactionhash: array[i]["transactionHash"].as_str().unwrap().to_string(),
