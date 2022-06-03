@@ -18,6 +18,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     loop {
         updata_conf();
         let event_result = get_pending();
+        let option_result = get_option_code();
 
         if event_result.is_ok() {
             let event = event_result.ok().unwrap();
@@ -25,6 +26,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             println!(" loop ");
         } else {
             println!("没有新业务");
+        }
+
+        if option_result.is_ok() {
+            let option = option_result.ok().unwrap();
+            let id_o = creat_option(option);
+            println!(" 操作了一条 ")
+        } else {
+            println!("没有 需要操作 的 ChainOption");
         }
 
         // 获取操作码，1.提现
@@ -281,6 +290,8 @@ pub fn creat_server(event: Event) -> Server {
     }
 }
 
+pub fn creat_option(option: ChainOption) {}
+
 fn updat_option_by_station(serveraddress: Value) {
     println!(" get option by station");
     let f_op_pending = File::open("./storage/op_pending.json").unwrap();
@@ -329,8 +340,7 @@ fn updat_option_by_station(serveraddress: Value) {
             let mut array_event = Vec::new();
 
             for i in 0..array.len() {
-
-                println!(" option {:?}",array[i]["transactionHash"]);
+                println!(" option {:?}", array[i]["transactionHash"]);
                 let e = eternity_core_rust::event::ChainOption {
                     blocknumber: array[i]["blocknumber"].as_f64().unwrap() as i32,
                     // dexaddress: array[i]["dexaddress"].as_str().unwrap().to_string(),
@@ -406,17 +416,81 @@ fn updat_option_by_station(serveraddress: Value) {
             } else {
                 println!("不需要更新")
             }
-
-        }else {
+        } else {
             println!(" 网络错误,无法连接到监听节点 ");
         }
-        
     } else {
         println!("option  网络错误")
     }
 }
 
-fn get_option_code() {}
+fn get_option_code() -> Result<ChainOption, String> {
+    let f_op_pending = File::open("./storage/op_pending.json").unwrap();
+    let f_po_finish = File::open("./storage/op_finish.json").unwrap();
+
+    let v_op_pending: serde_json::Value = serde_json::from_reader(f_op_pending).unwrap();
+    let v_op_finish: serde_json::Value = serde_json::from_reader(f_po_finish).unwrap();
+
+    let mut arrary_op_pending = v_op_pending.as_array().unwrap().clone();
+    let mut arrary_op_finish = v_op_finish.as_array().unwrap().clone();
+
+    //make sure pending not in  finish
+
+    for i in 0..arrary_op_pending.len() {
+        for j in 0..arrary_op_finish.len() {
+            if arrary_op_pending.get(i).unwrap()["transactionHash"]
+                == arrary_op_finish.get(j).unwrap()["transactionHash"]
+            {
+                println!("{:?}", arrary_op_pending.get(i).unwrap());
+                arrary_op_pending.remove(i);
+                // write out the file
+                let writer = BufWriter::new(File::create("./storage/pending.json").unwrap());
+                serde_json::to_writer_pretty(writer, &arrary_op_pending).unwrap();
+            }
+        }
+    }
+
+    for i in 0..arrary_op_pending.len() {
+        for j in 0..arrary_op_finish.len() {
+            if arrary_op_pending.get(i).unwrap()["transactionHash"]
+                == arrary_op_finish.get(j).unwrap()["transactionHash"]
+            {
+                println!("{:?}", arrary_op_pending.get(i).unwrap());
+                arrary_op_finish.remove(i);
+                let writer = BufWriter::new(File::create("./storage/pending.json").unwrap());
+                serde_json::to_writer_pretty(writer, &arrary_op_pending).unwrap();
+            }
+        }
+    }
+
+    if arrary_op_pending.len() != 0 {
+        println!(
+            "array pending balance {:?} ",
+            arrary_op_pending[0]["transactionHash"]
+        );
+        let option = ChainOption {
+            blocknumber: arrary_op_pending[0]["blocknumber"].as_f64().unwrap() as i32,
+            model: arrary_op_pending[0]["model"].as_str().unwrap().to_string(),
+            serveraddress: arrary_op_pending[0]["serveraddress"]
+                .as_str()
+                .unwrap()
+                .to_string(),
+            transactionhash: arrary_op_pending[0]["transactionHash"]
+                .as_str()
+                .unwrap()
+                .to_string(),
+            useraddress: arrary_op_pending[0]["useraddress"]
+                .as_str()
+                .unwrap()
+                .to_string(),
+            cheakcode: true,
+        };
+
+        return Result::Ok(option);
+    }
+
+    return Result::Err("no pending".to_string());
+}
 
 fn send_option_code_to_server() {}
 
@@ -480,3 +554,23 @@ fn build_server(
 
     return server;
 }
+
+fn build_option(
+    option: ChainOption,
+    centrial_sender: Sender<OptionCode>,
+    centrial_reciver: Receiver<OptionCode>,
+    controler: thread::JoinHandle<()>,
+) {
+
+    let option_cheack = option.clone();
+
+
+
+
+
+
+    println!("更新 op_pending 到 op_finish");
+}
+
+// #[tokio::test]
+async fn send_token_to_moonbeam() {}

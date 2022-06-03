@@ -2,8 +2,10 @@
     "moonbeam":"0xba7fb8146b2ae3E335332712CDE2C044E57f80A9",
     "account":"0xba7fb8146b2ae3E335332712CDE2C044E57f80A9",
     "name":"eternity",
+
+    "secrect_key":"e7688610e0ebfccbac5c9c5d637db2910d4b64f6f36460de6b964f4c725c9f95",
+
     "binance":{
-        
         "dexaddress":"  ",
         "serveraddress":"serveraddress test",
         "version":"0.1",
