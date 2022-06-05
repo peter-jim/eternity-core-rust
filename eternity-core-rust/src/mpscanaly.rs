@@ -6,6 +6,7 @@ pub enum OptionCode {
     ErrorStatus,
     AllOrder,
     AllBalance,
+    Withdraw,
 }
 
 impl OptionCode {

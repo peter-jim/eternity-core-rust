@@ -7,6 +7,7 @@ use eternity_core_rust::server::*;
 use serde::Serialize;
 use serde_json::Value;
 use std::error::Error;
+use std::f32::consts::E;
 use std::fs::File;
 use std::io::BufWriter;
 use std::sync::mpsc::channel;
@@ -15,6 +16,11 @@ use std::sync::mpsc::Sender;
 use std::thread;
 
 fn main() -> Result<(), Box<dyn Error>> {
+
+
+    clean_running();
+    let mut server_list = Vec::new();
+
     loop {
         updata_conf();
         let event_result = get_pending();
@@ -23,6 +29,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         if event_result.is_ok() {
             let event = event_result.ok().unwrap();
             let id = creat_server(event);
+            server_list.push(id);
             println!(" loop ");
         } else {
             println!("没有新业务");
@@ -30,8 +37,32 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         if option_result.is_ok() {
             let option = option_result.ok().unwrap();
-            let id_o = creat_option(option);
-            println!(" 操作了一条 ")
+
+            println!(" opiton is {:?}", option.transactionhash);
+            println!(" server_list is {:?}", server_list);
+
+            let mut flage = false;
+            // fina a bug ,if op pending not run in pending threding ,it not wrok
+            for i in &server_list {
+                println!(" server option is {:?}", i.transactionhash);
+                if i.transactionhash == option.transactionhash {
+                    println!("  找到一个可执行 Option   ");
+                    creat_option(option.clone());
+                    let op_sender = i.centrial_sender.clone();
+                    op_sender.send(OptionCode::Withdraw);
+
+                    // std::thread::sleep(std::time::Duration::from_secs(3));
+
+                    flage = true;
+                }
+            }
+
+            if flage == false {
+                println!(
+                    " 该option {:?} 未在running中找到程序",
+                    option.transactionhash
+                );
+            }
         } else {
             println!("没有 需要操作 的 ChainOption");
         }
@@ -44,6 +75,33 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+fn clean_running(){
+    //启动或重启，先清空op_running，和running。因为目前为止没有对应的线程。
+    let mut empty_array = serde_json::Value::Array(Vec::new())
+    .as_array()
+    .unwrap()
+    .clone();
+
+    let writer = BufWriter::new(File::create("./storage/op_running.json").unwrap());
+    serde_json::to_writer_pretty(writer, &empty_array).unwrap();
+
+
+
+    let mut empty_array = serde_json::Value::Array(Vec::new())
+    .as_array()
+    .unwrap()
+    .clone();
+
+    let writer = BufWriter::new(File::create("./storage/running.json").unwrap());
+    serde_json::to_writer_pretty(writer, &empty_array).unwrap();    
+
+    std::thread::sleep(std::time::Duration::from_secs(1));
+
+}
+
+
+
 
 fn updata_conf() {
     println!(" update config ");
@@ -119,11 +177,11 @@ fn updata_event_by_station(serveraddress: Value) {
                 array_event.push(e);
             }
 
-            println!("array is   {:?}", array.len());
-            println!(
-                "array transactionHash is   {:?}",
-                array[0]["transactionHash"]
-            );
+            // println!("array is   {:?}", array.len());
+            // println!(
+            //     "array transactionHash is   {:?}",
+            //     array[0]["transactionHash"]
+            // );
 
             //array must not in finish , pending anding running. If
             for i in 0..array.clone().len() {
@@ -141,7 +199,7 @@ fn updata_event_by_station(serveraddress: Value) {
             for i in 0..array.clone().len() {
                 for j in 0..arrary_running.len() {
                     if array[i]["transactionHash"] == arrary_running[j]["transactionHash"] {
-                        println!("在runing 中发现1个重复");
+                        // println!("在runing 中发现1个重复");
                         repeate_array.push(array[i].clone());
                     }
                 }
@@ -177,7 +235,7 @@ fn updata_event_by_station(serveraddress: Value) {
                 }
             }
 
-            println!("重复的数据有{:?} 个", repeate_array.len());
+            // println!("重复的数据有{:?} 个", repeate_array.len());
 
             if array.len() != 0 {
                 for i in 0..array_event.len() {
@@ -242,7 +300,7 @@ pub fn get_pending() -> Result<Event, String> {
     }
 
     if arrary_pending.len() != 0 {
-        println!("array pending balance {:?} ", arrary_pending[0]["balance"]);
+        // println!("array pending balance {:?} ", arrary_pending[0]["balance"]);
         let event = Event {
             balance: arrary_pending[0]["balance"].as_f64().unwrap() as f32,
             blocknumber: arrary_pending[0]["blocknumber"].as_f64().unwrap() as i32,
@@ -280,17 +338,52 @@ pub fn creat_server(event: Event) -> Server {
 
     let (centrial_sender, server_reciver) = channel();
     let (server_sender, centrial_reciver) = channel();
+    
+
+    let e  = event.clone();
     //update function just need to modify here
     if event.model == "AIP" {
-        let controler = thread::spawn(move || Server::AIP(server_reciver, server_sender));
-        build_server(event, centrial_sender, centrial_reciver, controler)
+        let controler = thread::spawn(move || Server::AIP(server_reciver, server_sender,event.clone()));
+        
+        build_server(e, centrial_sender, centrial_reciver, controler)
     } else {
         let controler = thread::spawn(move || Server::AIP_30(server_reciver, server_sender));
         build_server(event, centrial_sender, centrial_reciver, controler)
     }
 }
 
-pub fn creat_option(option: ChainOption) {}
+pub fn creat_option(option: ChainOption) {
+    println!(" 执行creat_option ");
+    let f_op_pending = File::open("./storage/op_pending.json").unwrap();
+    let f_po_running = File::open("./storage/op_running.json").unwrap();
+
+    let v_op_pending: serde_json::Value = serde_json::from_reader(f_op_pending).unwrap();
+    let v_op_running: serde_json::Value = serde_json::from_reader(f_po_running).unwrap();
+
+    let mut arrary_op_pending = v_op_pending.as_array().unwrap().clone();
+    let mut arrary_op_running = v_op_running.as_array().unwrap().clone();
+
+    //remove option from pending
+    for i in 0..arrary_op_pending.len() {
+        if arrary_op_pending[i]["transactionHash"] == option.transactionhash {
+            arrary_op_running.push(arrary_op_pending[i].clone());
+            //add option to running.
+            // write out the file
+
+            let writer = BufWriter::new(File::create("./storage/op_running.json").unwrap());
+            serde_json::to_writer_pretty(writer, &arrary_op_running).unwrap();
+
+            arrary_op_pending.remove(i);
+
+            let writer = BufWriter::new(File::create("./storage/op_pending.json").unwrap());
+            serde_json::to_writer_pretty(writer, &arrary_op_pending).unwrap();
+
+            break;
+        }
+    }
+
+    println!("option 更新完成");
+}
 
 fn updat_option_by_station(serveraddress: Value) {
     println!(" get option by station");
@@ -555,19 +648,8 @@ fn build_server(
     return server;
 }
 
-fn build_option(
-    option: ChainOption,
-    centrial_sender: Sender<OptionCode>,
-    centrial_reciver: Receiver<OptionCode>,
-    controler: thread::JoinHandle<()>,
-) {
-
+fn build_option(option: ChainOption, server_list: Vec<Server>) {
     let option_cheack = option.clone();
-
-
-
-
-
 
     println!("更新 op_pending 到 op_finish");
 }
