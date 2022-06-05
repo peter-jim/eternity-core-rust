@@ -26,14 +26,23 @@ fn main() -> Result<(), Box<dyn Error>> {
         let event_result = get_pending();
         let option_result = get_option_code();
 
-        if event_result.is_ok() {
-            let event = event_result.ok().unwrap();
-            let id = creat_server(event);
-            server_list.push(id);
-            println!(" loop ");
-        } else {
-            println!("没有新业务");
+       let num =  server_list.len() as i32;
+       max_server_check(num);
+
+        //
+        if max_server_check(num) == true{
+
+            if event_result.is_ok() {
+                let event = event_result.ok().unwrap();
+                let id = creat_server(event);
+                server_list.push(id);
+                println!(" loop ");
+            } else {
+                println!("没有新业务");
+            }
+
         }
+
 
         if option_result.is_ok() {
             let option = option_result.ok().unwrap();
@@ -100,7 +109,25 @@ fn clean_running(){
 
 }
 
+fn max_server_check(num:i32) -> bool{
 
+    let f = File::open("conf.json").unwrap();
+    let v: serde_json::Value = serde_json::from_reader(f).unwrap();
+
+    let maxaccount =  v["binance"]["maxaccount"].as_i64().unwrap() as i32;
+
+    let f_running = File::open("./storage/running.json").unwrap();
+    let v_running: serde_json::Value = serde_json::from_reader(f_running).unwrap();
+    let mut arrary_running = v_running.as_array().unwrap().clone();
+    let num_run = arrary_running.len() as i32;
+
+    if num_run < maxaccount{
+        return true;
+    }else {
+        return false
+    }
+
+}
 
 
 fn updata_conf() {
@@ -655,4 +682,6 @@ fn build_option(option: ChainOption, server_list: Vec<Server>) {
 }
 
 // #[tokio::test]
-async fn send_token_to_moonbeam() {}
+async fn send_token_to_moonbeam() {
+
+}
