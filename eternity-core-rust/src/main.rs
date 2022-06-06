@@ -36,12 +36,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                 let event = event_result.ok().unwrap();
                 let id = creat_server(event);
                 server_list.push(id);
-                println!(" loop ");
             } else {
                 println!("没有新业务");
             }
 
+        }else{
+            println!("目前的最大负载数已达上限请更新服务器配置，并在conf.json中扩容");
         }
+
+
 
 
         if option_result.is_ok() {
@@ -67,10 +70,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
 
             if flage == false {
+                
+                //如果不在runin，代表该服务还未启动。1.我们需要启动该服务 2.移除该服务，
                 println!(
                     " 该option {:?} 未在running中找到程序",
                     option.transactionhash
                 );
+                
+
+
             }
         } else {
             println!("没有 需要操作 的 ChainOption");

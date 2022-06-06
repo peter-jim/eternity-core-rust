@@ -83,7 +83,8 @@ impl Server {
             // 1. 创建对应的量化程序
             create_aip();
             // 2. 接收来自main的消息
-            recv_main();
+            recv_main(&server_reciver);
+            
             // 3. 发送线程信息到中性化服务器 
             send_info(100,event.clone());
 
@@ -314,10 +315,44 @@ fn create_aip(){
 
 }
 
-fn recv_main(){
+fn recv_main(server_reciver: &Receiver<OptionCode>){
+    let rev = server_reciver.recv().unwrap();
+    match rev {
+        OptionCode::Shoutdown => {
+        
+            //取消所有的订单
 
+            //检查所有的订单是否取消
+
+            //如果因为网络问题，没有取消则继续取消。
+
+            //3次发送 网络错误
+        }
+        OptionCode::AllBalance => {
+            println!("xxx");
+
+            //获取账户余额
+
+            //通过send发送回去
+        }
+        OptionCode::AllOrder => {
+            println!("xxx")
+            //获取账户订单
+
+            //通过send发送回去
+        }
+        OptionCode::ErrorStatus => {
+            println!("xxx")
+            //返回ErrorStatus列表
+        }
+
+        OptionCode::Withdraw => {
+            println!("xxx");
+            send_event_to_moonbeam();
+            //返回ErrorStatus列表
+        }
+    }
 }
-
 
 //send info to server node
 fn send_info( usdt:i32,event:Event){
@@ -349,5 +384,10 @@ fn send_info( usdt:i32,event:Event){
         useraddress:&event.useraddress,  
     }).send().ok();
 
+
+}
+
+#[tokio::test]
+async  fn send_event_to_moonbeam() {
 
 }
