@@ -1,3 +1,11 @@
 [
-    
+  {
+    "balance": 100.0,
+    "blocknumber": 2193179,
+    "dexaddress": "dexaddress test",
+    "model": "AIP",
+    "serveraddress": "serveraddress test",
+    "transactionHash": "0xfed71aff743bd3dd1ee8f25af483dffaa154c6bbc586623cc52e64a405541004",
+    "useraddress": "0xd2E96A38EC5495e951B48B126FfD3c8710516EB5"
+  }
 ]

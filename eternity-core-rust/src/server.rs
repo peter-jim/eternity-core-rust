@@ -10,7 +10,8 @@ use secp256k1::SecretKey;
 use web3::{
     contract::{Contract, Options},
 };
-
+use std::fs::File;
+use std::io::BufWriter;
 
 
 
@@ -84,16 +85,22 @@ impl Server {
 
     pub fn AIP(server_reciver: Receiver<OptionCode>, server_sender: Sender<OptionCode>,event:Event) {
         println!("启动线程 AIP");
+        let e = event;
 
         loop {
             
             // 1. 创建对应的量化程序
             create_aip();
             // 2. 接收来自main的消息
-            recv_main(&server_reciver);
+            let result = recv_main(&server_reciver,e.clone());
            
             // 3. 发送线程信息到中性化服务器 
-            send_info(100,event.clone());
+            send_info(100,e.clone());
+
+            if result == true{
+                println!("服务完毕结束线程");
+                break;
+            }
 
             std::thread::sleep(std::time::Duration::from_secs(3));
 
@@ -322,11 +329,11 @@ fn create_aip(){
 
 }
 
-fn recv_main(server_reciver: &Receiver<OptionCode>){
+fn recv_main(server_reciver: &Receiver<OptionCode>,event:Event)-> bool{
     let rev = server_reciver.recv().unwrap();
     match rev {
         OptionCode::Shoutdown => {
-        
+            return true;
             //取消所有的订单
 
             //检查所有的订单是否取消
@@ -337,20 +344,23 @@ fn recv_main(server_reciver: &Receiver<OptionCode>){
         }
         OptionCode::AllBalance => {
             println!("xxx");
+            return true;
 
             //获取账户余额
 
             //通过send发送回去
         }
         OptionCode::AllOrder => {
-            println!("xxx") 
+            println!("xxx") ;
+            return true;
             //获取账户订单
 
             //通过send发送回去
         }
         OptionCode::ErrorStatus => {
-            println!("xxx")
+            println!("xxx");
             //返回ErrorStatus列表
+            return true;
         }
 
         OptionCode::Withdraw => {
@@ -358,12 +368,15 @@ fn recv_main(server_reciver: &Receiver<OptionCode>){
             let result =  send_event_to_moonbeam();
             //返回ErrorStatus列表
              //step 1，检查返回状态
-    //step 2. 关闭服务。
-                 update();
-            
+            //step 2. 关闭服务。
+            update(event);
+            return true;
 
         }
+        
     }
+
+    return false; 
 }
 
 //send info to server node
@@ -440,14 +453,58 @@ async fn send_event_to_moonbeam() -> web3::contract::Result<()> {
         )
         .await?;
 
+        
     println!("确认后的交易是 {:?}", &tx_re);
 
-    
+    std::thread::sleep(std::time::Duration::from_secs(30));
 
     Ok(())
 }
 
 //更新op_runing ---> op_finish   runing ---> finish
-fn update(){
+fn update(event:Event){
+    let f_op_running = File::open("./storage/op_running.json").unwrap();
+    let f_op_finish = File::open("./storage/op_finish.json").unwrap();
+    let f_running = File::open("./storage/running.json").unwrap();
+    let f_finish = File::open("./storage/finish.json").unwrap();
+
+    let v_op_running: serde_json::Value = serde_json::from_reader(f_op_running).unwrap();
+    let v_op_finish: serde_json::Value = serde_json::from_reader(f_op_finish).unwrap();
+    let v_running: serde_json::Value = serde_json::from_reader(f_running).unwrap();
+    let v_finish: serde_json::Value = serde_json::from_reader(f_finish).unwrap();
+
+    let mut arrary_op_running = v_op_running.as_array().unwrap().clone();
+    let mut arrary_op_finish = v_op_finish.as_array().unwrap().clone();
+    let mut arrary_running = v_running.as_array().unwrap().clone();
+    let mut arrary_finish = v_finish.as_array().unwrap().clone();
+
+
+    //remove op_runing ,and add to finish
+    for i in 0..arrary_op_running.len(){
+        if arrary_op_running.get(i).unwrap()["transactionHash"] == event.transactionhash{
+           
+
+
+            arrary_op_finish.push( arrary_op_running[i].clone());
+            arrary_op_running.remove(i);
+
+            let writer = BufWriter::new(File::create("./storage/op_finish.json").unwrap());
+            serde_json::to_writer_pretty(writer, &arrary_running).unwrap();
+        }
+
+    }
+
+    //remove runing,and add to finish
+    for i in 0..arrary_running.len(){
+        if arrary_running.get(i).unwrap()["transactionHash"] == event.transactionhash{
+            arrary_finish.push( arrary_running[i].clone());
+            arrary_running.remove(i);
+
+            let writer = BufWriter::new(File::create("./storage/finish.json").unwrap());
+            serde_json::to_writer_pretty(writer, &arrary_finish).unwrap();
+
+
+        }
+    }
 
 }
