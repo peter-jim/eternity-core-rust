@@ -15,7 +15,7 @@
             "AIP":[20,10,20,20],
             "AIP30":[100,199]
         },
-        "maxaccount":1
+        "maxaccount":4
     },
     "mexc":{
         "address":"  ",

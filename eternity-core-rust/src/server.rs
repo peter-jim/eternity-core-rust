@@ -354,9 +354,14 @@ fn recv_main(server_reciver: &Receiver<OptionCode>){
         }
 
         OptionCode::Withdraw => {
-            println!("xxx");
+            println!("启动提款线程");
             let result =  send_event_to_moonbeam();
             //返回ErrorStatus列表
+             //step 1，检查返回状态
+    //step 2. 关闭服务。
+                 update();
+            
+
         }
     }
 }
@@ -437,7 +442,12 @@ async fn send_event_to_moonbeam() -> web3::contract::Result<()> {
 
     println!("确认后的交易是 {:?}", &tx_re);
 
+    
+
     Ok(())
 }
 
+//更新op_runing ---> op_finish   runing ---> finish
+fn update(){
 
+}

@@ -6,8 +6,13 @@ use web3::{
 };
 use std::{time, str::FromStr};
 
+
+fn main(){
+    b();
+}
+
 #[tokio::main]
-async fn main() -> web3::contract::Result<()> {
+async fn b() -> web3::contract::Result<()> {
     println!("Accounts: ");
     let transport = web3::transports::Http::new("https://rpc.testnet.moonbeam.network")?;
     let web3 = web3::Web3::new(transport);

@@ -44,7 +44,7 @@ async fn a() -> web3::contract::Result<()> {
     // println!("tx is {:?}",&tx);
     // let tx = contract.call("putOrder", (accounts[0],1_000_000_u64), accounts[0], Options::default()).await?;
     // println!("got tx: {:?}", tx);
-
+    std::thread::sleep(std::time::Duration::from_secs(20));
     let tx_re = contract
         .signed_call_with_confirmations(
             "putOrder",
@@ -56,6 +56,9 @@ async fn a() -> web3::contract::Result<()> {
         .await?;
 
     println!("确认后的交易是 {:?}", &tx_re);
+
+    std::thread::sleep(std::time::Duration::from_secs(20));
+    println!("关闭程序");
 
     Ok(())
 }

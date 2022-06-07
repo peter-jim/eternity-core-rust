@@ -7,5 +7,23 @@
     "serveraddress": "serveraddress test",
     "transactionHash": "0x8ce9cb9ade8e8fe3dba95c0bc7efa9c157bafbb690d1bbec3f70f4ff8ca5856f",
     "useraddress": "0xd2E96A38EC5495e951B48B126FfD3c8710516EB5"
+  },
+  {
+    "balance": 100.0,
+    "blocknumber": 2193179,
+    "dexaddress": "dexaddress test",
+    "model": "AIP",
+    "serveraddress": "serveraddress test",
+    "transactionHash": "0xa407ee9d0f6a6f01f83f884b95f42ea6323153e9d24ff460b3b9d99e0d5233be",
+    "useraddress": "0xd2E96A38EC5495e951B48B126FfD3c8710516EB5"
+  },
+  {
+    "balance": 100.0,
+    "blocknumber": 2193179,
+    "dexaddress": "dexaddress test",
+    "model": "AIP",
+    "serveraddress": "serveraddress test",
+    "transactionHash": "0xfed71aff743bd3dd1ee8f25af483dffaa154c6bbc586623cc52e64a405541004",
+    "useraddress": "0xd2E96A38EC5495e951B48B126FfD3c8710516EB5"
   }
 ]

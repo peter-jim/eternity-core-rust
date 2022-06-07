@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 let id = creat_server(event);
                 server_list.push(id);
             } else {
-                println!("没有新业务");
+                println!("没有新业务，目前有{:?}个线程在运行",server_list.len());
             }
 
         }else{
@@ -88,6 +88,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         // let op_code =  get_option_code();
 
         std::thread::sleep(std::time::Duration::from_secs(10));
+
+        //返回函数全局状态到中性化节点
+        send_globe_info();
+
     }
 
     Ok(())
@@ -423,13 +427,19 @@ pub fn creat_option(option: ChainOption) {
 fn updat_option_by_station(serveraddress: Value) {
     println!(" get option by station");
     let f_op_pending = File::open("./storage/op_pending.json").unwrap();
-    let f_po_finish = File::open("./storage/op_finish.json").unwrap();
+    let f_op_running = File::open("./storage/op_running.json").unwrap();
+    let f_op_finish = File::open("./storage/op_finish.json").unwrap();
+    let f_op_error = File::open("./storage/op_error.json").unwrap();
 
     let v_op_pending: serde_json::Value = serde_json::from_reader(f_op_pending).unwrap();
-    let v_op_finish: serde_json::Value = serde_json::from_reader(f_po_finish).unwrap();
+    let v_op_running: serde_json::Value = serde_json::from_reader(f_op_running).unwrap();
+    let v_op_finish: serde_json::Value = serde_json::from_reader(f_op_finish).unwrap();
+    let v_op_error: serde_json::Value = serde_json::from_reader(f_op_error).unwrap();
 
     let mut arrary_op_pending = v_op_pending.as_array().unwrap().clone();
+    let mut arrary_op_running = v_op_running.as_array().unwrap().clone();
     let mut arrary_op_finish = v_op_finish.as_array().unwrap().clone();
+    let mut arrary_op_error = v_op_error.as_array().unwrap().clone();
 
     let mut repeate_array = serde_json::Value::Array(Vec::new())
         .as_array()
@@ -488,7 +498,7 @@ fn updat_option_by_station(serveraddress: Value) {
                 array[0]["transactionHash"]
             );
 
-            //array must not in finish , pending
+            //array must not in op finish 
             for i in 0..array.clone().len() {
                 for j in 0..arrary_op_finish.clone().len() {
                     println!(
@@ -496,6 +506,35 @@ fn updat_option_by_station(serveraddress: Value) {
                         arrary_op_finish[j]["transactionHash"]
                     );
                     if array[i]["transactionHash"] == arrary_op_finish[j]["transactionHash"] {
+                        // array.remove(i);
+                        println!("在finish 中发现1个重复");
+                        repeate_array.push(array[i].clone());
+                    }
+                }
+            }
+
+            //array must not in op running 
+            for i in 0..array.clone().len() {
+                for j in 0..arrary_op_running.clone().len() {
+                    println!(
+                        "arrary finish is {:?}",
+                        arrary_op_running[j]["transactionHash"]
+                    );
+                    if array[i]["transactionHash"] == arrary_op_running[j]["transactionHash"] {
+                        // array.remove(i);
+                        println!("在finish 中发现1个重复");
+                        repeate_array.push(array[i].clone());
+                    }
+                }
+            }
+            //array must not in op error
+            for i in 0..array.clone().len() {
+                for j in 0..arrary_op_error.clone().len() {
+                    println!(
+                        "arrary finish is {:?}",
+                        arrary_op_error[j]["transactionHash"]
+                    );
+                    if array[i]["transactionHash"] == arrary_op_error[j]["transactionHash"] {
                         // array.remove(i);
                         println!("在finish 中发现1个重复");
                         repeate_array.push(array[i].clone());
@@ -554,6 +593,7 @@ fn updat_option_by_station(serveraddress: Value) {
 
 fn get_option_code() -> Result<ChainOption, String> {
     let f_op_pending = File::open("./storage/op_pending.json").unwrap();
+
     let f_po_finish = File::open("./storage/op_finish.json").unwrap();
 
     let v_op_pending: serde_json::Value = serde_json::from_reader(f_op_pending).unwrap();
@@ -691,5 +731,10 @@ fn build_option(option: ChainOption, server_list: Vec<Server>) {
 
 // #[tokio::test]
 async fn send_token_to_moonbeam() {
+
+}
+
+
+fn send_globe_info(){
 
 }
