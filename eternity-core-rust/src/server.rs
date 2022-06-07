@@ -1,11 +1,18 @@
 use serde::Serialize;
-
 use crate::account::*;
 use crate::api::*;
 use crate::event::Event;
 use crate::market::*;
 use crate::mpscanaly::*;
+use std::str::FromStr;
 use std::{sync::mpsc::Receiver, sync::mpsc::Sender, thread::JoinHandle};
+use secp256k1::SecretKey;
+use web3::{
+    contract::{Contract, Options},
+};
+
+
+
 
 #[derive(Debug)]
 pub struct Server {
@@ -79,12 +86,12 @@ impl Server {
         println!("启动线程 AIP");
 
         loop {
-
+            
             // 1. 创建对应的量化程序
             create_aip();
             // 2. 接收来自main的消息
             recv_main(&server_reciver);
-            
+           
             // 3. 发送线程信息到中性化服务器 
             send_info(100,event.clone());
 
@@ -336,7 +343,7 @@ fn recv_main(server_reciver: &Receiver<OptionCode>){
             //通过send发送回去
         }
         OptionCode::AllOrder => {
-            println!("xxx")
+            println!("xxx") 
             //获取账户订单
 
             //通过send发送回去
@@ -348,7 +355,7 @@ fn recv_main(server_reciver: &Receiver<OptionCode>){
 
         OptionCode::Withdraw => {
             println!("xxx");
-            send_event_to_moonbeam();
+            let result =  send_event_to_moonbeam();
             //返回ErrorStatus列表
         }
     }
@@ -387,7 +394,50 @@ fn send_info( usdt:i32,event:Event){
 
 }
 
-#[tokio::test]
-async  fn send_event_to_moonbeam() {
 
+
+
+
+#[tokio::main]
+async fn send_event_to_moonbeam() -> web3::contract::Result<()> {
+    println!("start run web3: ");
+    let transport = web3::transports::Http::new("https://rpc.testnet.moonbeam.network")?;
+    let web3 = web3::Web3::new(transport);
+
+    let mut accounts = web3.eth().accounts().await?;
+    println!("Accounts: {:?}", accounts);
+    accounts.push("d028d24f16a8893bd078259d413372ac01580769".parse().unwrap());
+
+    let private_key =
+        SecretKey::from_str("e7688610e0ebfccbac5c9c5d637db2910d4b64f6f36460de6b964f4c725c9f95")
+            .unwrap();
+
+    let contract = Contract::from_json(
+        web3.eth(),
+        "d028d24f16a8893bd078259d413372ac01580769".parse().unwrap(),
+        include_bytes!("../res/demo.abi"),
+    )
+    .unwrap();
+
+    // let tx =  contract.signed_call("putOrder", (accounts[0],1_000_000_u64), Options::default(), & private_key).await?;
+
+    // println!("tx is {:?}",&tx);
+    // let tx = contract.call("putOrder", (accounts[0],1_000_000_u64), accounts[0], Options::default()).await?;
+    // println!("got tx: {:?}", tx);
+
+    let tx_re = contract
+        .signed_call_with_confirmations(
+            "putOrder",
+            (accounts[0], 1_000_000_u64),
+            Options::default(),
+            1,
+            &private_key,
+        )
+        .await?;
+
+    println!("确认后的交易是 {:?}", &tx_re);
+
+    Ok(())
 }
+
+

@@ -1,5 +1,5 @@
 
-use hex_literal::hex;
+use hex_literal::*;
 use secp256k1::SecretKey;
 use std::{str::FromStr, time};
 use web3::{
