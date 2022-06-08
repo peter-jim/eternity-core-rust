@@ -33,6 +33,9 @@ bitcoin_hashes = { version = "0.10", default-features = false, optional = true }
 
 time = { version = "0.3.5", features = ["macros"] }
 
+
+mysql = "*"
+
 [dev-dependencies]
 # For examples
 
