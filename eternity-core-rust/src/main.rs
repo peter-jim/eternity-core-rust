@@ -4,6 +4,13 @@ use eternity_core_rust::event::*;
 use eternity_core_rust::market::*;
 use eternity_core_rust::mpscanaly::*;
 use eternity_core_rust::server::*;
+use hmac::digest::consts::False;
+use hmac::digest::consts::True;
+use mysql::Opts;
+use mysql::Pool;
+use mysql::PooledConn;
+use mysql::from_row;
+use mysql::params;
 use serde::Serialize;
 use serde_json::Value;
 use std::error::Error;
@@ -14,6 +21,9 @@ use std::sync::mpsc::channel;
 use std::sync::mpsc::Receiver;
 use std::sync::mpsc::Sender;
 use std::thread;
+use mysql::prelude::*;
+
+
 
 fn main() -> Result<(), Box<dyn Error>> {
 
@@ -143,12 +153,12 @@ fn max_server_check(num:i32) -> bool{
 
 
 fn updata_conf() {
-    println!(" update config ");
+    println!(" update config ");    
     let f = File::open("conf.json").unwrap();
     let v: serde_json::Value = serde_json::from_reader(f).unwrap();
     let serveraddress = v["binance"]["serveraddress"].clone();
-    updata_event_by_station(serveraddress.clone());
-    updat_option_by_station(serveraddress);
+    update_event_by_station_v2(serveraddress.clone());
+    update_option_by_station_v2(serveraddress);
 }
 
 fn updata_event_by_station(serveraddress: Value) {
@@ -737,4 +747,205 @@ async fn send_token_to_moonbeam() {
 
 fn send_globe_info(){
 
+}
+
+fn update_option_by_station_v2(serveraddress: Value){
+    //we use mysql to storage
+    println!(" get option by station");
+
+}
+
+fn update_event_by_station_v2(serveraddress: Value){
+    //we use mysql to storage
+    println!(" get event by station");
+
+    #[derive(Serialize)]
+    struct Event<'a> {
+        nodeaddress: &'a str,
+        body: &'a str,
+    }
+
+    let client = reqwest::blocking::Client::builder()
+        .pool_idle_timeout(None)
+        .build()
+        .unwrap();
+
+    println!(" ready to get chain event data  ");
+    let response = client
+        .get("http://127.0.0.1:5000/chaindata")
+        .json(&Event {
+            nodeaddress: serveraddress.as_str().unwrap(),
+            body: "json",
+        })
+        .send();
+    println!(" get response status is  {:?}", response.is_ok());
+    if response.is_ok() == true {
+        let response = response.ok();
+        let mut array_result = response.unwrap().json::<serde_json::Value>();
+        
+        if array_result.is_ok() {
+            let mut array = array_result.unwrap().as_array().unwrap().clone();
+            
+
+            for i in 0..array.len() {
+                // let e = eternity_core_rust::event::Event {
+                //     balance: array[i]["balance"].as_f64().unwrap() as f32,
+                //     blocknumber: array[i]["blocknumber"].as_f64().unwrap() as i32,
+                //     dexaddress: array[i]["dexaddress"].as_str().unwrap().to_string(),
+                //     model: array[i]["model"].as_str().unwrap().to_string(),
+                //     serveraddress: array[i]["serveraddress"].as_str().unwrap().to_string(),
+                //     transactionhash: array[i]["transactionHash"].as_str().unwrap().to_string(),
+                //     useraddress: array[i]["useraddress"].as_str().unwrap().to_string(),
+                //     cheakcode: true,
+                // };
+
+                // array_event.push(e);
+
+                insert_mysql(array[i].clone());
+            }
+
+
+        }else {
+            
+            println!(" 网络错误,无法连接到监听节点 ");
+        
+        }    
+
+
+    }else {
+        println!("network error");
+    }
+
+    
+}
+
+
+
+fn insert_mysql(event:Value){
+
+
+    let is_exist = is_exist_in_mysql(event.clone());
+    println!(" is exist is {:?}",is_exist);
+    match is_exist {
+        false => {
+            println!("不需要更新")
+
+        }
+        
+        true => {
+            println!("插入");
+
+            insert_to_mysql(event.clone())
+
+        }
+    }
+
+    
+
+    //数据库操作
+    //1.查询user表
+    //方式1：流式查询  数据逐行读取，数据不会存储在内存中
+
+    
+ 
+
+
+    
+}
+
+fn is_exist_in_mysql(event: Value) -> bool{
+    let url = "mysql://root:1416615127dj@localhost:3306/event";
+    let opts = Opts::from_url(url).unwrap();// 类型转换将 url 转为opts
+     //连接数据库 这里 老版本是直接传url 字符串即可 新版本21版要求必须为opts类型
+    let pool = Pool::new(opts).unwrap();
+    let mut conn = pool.get_conn().unwrap();
+
+    let e = event.clone();
+
+    //数据库操作
+    //1.查询user表
+    //方式1：流式查询  数据逐行读取，数据不会存储在内存中
+
+ 
+
+    println!("要插入的数据是{:?}",e["transactionhash"].as_str().unwrap());
+    
+    let mut res:Result<Option<(String,String,String,f32,String,String,String,String)>,_> = conn
+        .exec_first(
+            "select * from NodeAccountStatus where transactionhash = :transactionhash",
+            params! {
+                "transactionhash" => e["transactionhash"].as_str().unwrap()
+            },
+        );
+     println!("存在数据  {:?}",res); 
+    if res.unwrap() ==None{
+        println!("查询为空");
+        return true;
+    }else{
+        println!("已经存在数据");
+        return false;
+    }
+    
+
+
+
+}
+
+fn insert_to_mysql(event:Value){
+    #[derive(Debug,Clone)]
+    pub struct  Event{
+        pub transactionhash: String,
+        pub dexaddress: String,
+        pub serveraddress:String,
+        pub balance: f32,
+        pub optionstatus: String,
+        pub eventstatus: String,
+        pub model: String,
+        pub useraddress: String,
+    }
+
+    println!("event 数据是 {:?}",event.as_object().unwrap());
+    let event = event.as_object().unwrap();
+
+    println!("balance is {:?}", event["balance"].as_f64().unwrap());
+
+    let event = vec![Event{
+        transactionhash: event["transactionhash"].to_string(),
+         dexaddress: event["dexaddress"].to_string(),
+         serveraddress:event["serveraddress"].to_string(),
+         balance: event["balance"].as_f64().unwrap() as f32  ,
+         optionstatus: "pending".to_string(),
+         eventstatus: "pending".to_string(),
+         model: event["model"].to_string(),
+         useraddress: event["useraddress"].to_string(),
+   }]  ;
+   
+  let mut conn = init_mysql();
+
+  println!("插入数据{:?}",event[0].transactionhash);
+    conn.exec_batch(
+        r"INSERT INTO NodeAccountStatus (transactionhash, dexaddress, serveraddress,balance,optionstatus,eventstatus,model,useraddress)
+          VALUES (:transactionhash, :dexaddress, :serveraddress,:balance,:optionstatus,:eventstatus,:model,:useraddress)",
+        event.iter(). map(|p| params! {
+            "transactionhash" => &p.transactionhash,
+            "dexaddress" => &p.dexaddress,
+            "serveraddress" => &p.serveraddress,
+            "balance"=>p.balance,
+            "optionstatus"=>&p.optionstatus,
+            "eventstatus"=>&p.eventstatus,
+            "model"=>&p.model,
+            "useraddress"=>&p.useraddress,
+        })
+    );
+}
+
+fn init_mysql()->PooledConn{
+    println!("初始化muysql");
+    //设置连接字符串
+    let url = "mysql://root:1416615127dj@localhost:3306/event";
+    let opts = Opts::from_url(url).unwrap();// 类型转换将 url 转为opts
+     //连接数据库 这里 老版本是直接传url 字符串即可 新版本21版要求必须为opts类型
+    let pool = Pool::new(opts).unwrap();
+    let mut conn = pool.get_conn().unwrap();
+    return conn; 
 }
