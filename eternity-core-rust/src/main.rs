@@ -872,7 +872,7 @@ fn is_exist_in_mysql(event: Value) -> bool{
     
     let mut res:Result<Option<(String,String,String,f32,String,String,String,String)>,_> = conn
         .exec_first(
-            "select * from NodeAccountStatus where transactionhash = :transactionhash",
+            r"select * from NodeAccountStatus where transactionhash = :transactionhash",
             params! {
                 "transactionhash" => e["transactionhash"].as_str().unwrap()
             },
@@ -904,27 +904,28 @@ fn insert_to_mysql(event:Value){
         pub useraddress: String,
     }
 
-    println!("event 数据是 {:?}",event.as_object().unwrap());
-    let event = event.as_object().unwrap();
+    
+    let e = event.clone();
+    
 
-    println!("balance is {:?}", event["balance"].as_f64().unwrap());
+    println!("transactionhash is {:?}", &e["transactionhash"].as_str().unwrap().to_string());
 
     let event = vec![Event{
-        transactionhash: event["transactionhash"].to_string(),
-         dexaddress: event["dexaddress"].to_string(),
-         serveraddress:event["serveraddress"].to_string(),
-         balance: event["balance"].as_f64().unwrap() as f32  ,
+        transactionhash: e["transactionhash"].as_str().unwrap().to_string(),
+         dexaddress: e["dexaddress"].as_str().unwrap().to_string(),
+         serveraddress:e["serveraddress"].as_str().unwrap().to_string(),
+         balance: e["balance"].as_f64().unwrap() as f32  ,
          optionstatus: "pending".to_string(),
          eventstatus: "pending".to_string(),
-         model: event["model"].to_string(),
-         useraddress: event["useraddress"].to_string(),
+         model: e["model"].as_str().unwrap().to_string(),
+         useraddress: e["useraddress"].as_str().unwrap().to_string(),
    }]  ;
    
   let mut conn = init_mysql();
 
   println!("插入数据{:?}",event[0].transactionhash);
     conn.exec_batch(
-        r"INSERT INTO NodeAccountStatus (transactionhash, dexaddress, serveraddress,balance,optionstatus,eventstatus,model,useraddress)
+        "INSERT INTO NodeAccountStatus (transactionhash, dexaddress, serveraddress,balance,optionstatus,eventstatus,model,useraddress)
           VALUES (:transactionhash, :dexaddress, :serveraddress,:balance,:optionstatus,:eventstatus,:model,:useraddress)",
         event.iter(). map(|p| params! {
             "transactionhash" => &p.transactionhash,
@@ -937,6 +938,7 @@ fn insert_to_mysql(event:Value){
             "useraddress"=>&p.useraddress,
         })
     );
+    println!("数据更新完成");
 }
 
 fn init_mysql()->PooledConn{

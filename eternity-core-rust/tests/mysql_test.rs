@@ -99,6 +99,8 @@ fn test_select_nodeaccountstatus(){
     let mut conn = pool.get_conn().unwrap();
 
 
+
+    //该bug 无法查询tansactionhash的原因是 String 插入会有 “”。
     let mut res:Result<Option<(String,String,String,f32,String,String,String,String)>> = conn
     .exec_first(
         "select * from NodeAccountStatus where balance = :balance",
