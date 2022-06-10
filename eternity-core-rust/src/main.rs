@@ -6,11 +6,12 @@ use eternity_core_rust::mpscanaly::*;
 use eternity_core_rust::server::*;
 use hmac::digest::consts::False;
 use hmac::digest::consts::True;
+use mysql::from_row;
+use mysql::params;
+use mysql::prelude::*;
 use mysql::Opts;
 use mysql::Pool;
 use mysql::PooledConn;
-use mysql::from_row;
-use mysql::params;
 use serde::Serialize;
 use serde_json::Value;
 use std::error::Error;
@@ -21,13 +22,8 @@ use std::sync::mpsc::channel;
 use std::sync::mpsc::Receiver;
 use std::sync::mpsc::Sender;
 use std::thread;
-use mysql::prelude::*;
-
-
 
 fn main() -> Result<(), Box<dyn Error>> {
-
-
     clean_running();
     let mut server_list = Vec::new();
 
@@ -36,26 +32,21 @@ fn main() -> Result<(), Box<dyn Error>> {
         let event_result = get_pending();
         let option_result = get_option_code();
 
-       let num =  server_list.len() as i32;
-       max_server_check(num);
+        let num = server_list.len() as i32;
+        max_server_check(num);
 
         //
-        if max_server_check(num) == true{
-
+        if max_server_check(num) == true {
             if event_result.is_ok() {
                 let event = event_result.ok().unwrap();
                 let id = creat_server(event);
                 server_list.push(id);
             } else {
-                println!("没有新业务，目前有{:?}个线程在运行",server_list.len());
+                println!("没有新业务，目前有{:?}个线程在运行", server_list.len());
             }
-
-        }else{
+        } else {
             println!("目前的最大负载数已达上限请更新服务器配置，并在conf.json中扩容");
         }
-
-
-
 
         if option_result.is_ok() {
             let option = option_result.ok().unwrap();
@@ -80,15 +71,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
 
             if flage == false {
-                
                 //如果不在runin，代表该服务还未启动。1.我们需要启动该服务 2.移除该服务，
                 println!(
                     " 该option {:?} 未在running中找到程序",
                     option.transactionhash
                 );
-                
-
-
             }
         } else {
             println!("没有 需要操作 的 ChainOption");
@@ -101,59 +88,52 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         //返回函数全局状态到中性化节点
         send_globe_info();
-
     }
 
     Ok(())
 }
 
-fn clean_running(){
+fn clean_running() {
     //启动或重启，先清空op_running，和running。因为目前为止没有对应的线程。
     let mut empty_array = serde_json::Value::Array(Vec::new())
-    .as_array()
-    .unwrap()
-    .clone();
+        .as_array()
+        .unwrap()
+        .clone();
 
     let writer = BufWriter::new(File::create("./storage/op_running.json").unwrap());
     serde_json::to_writer_pretty(writer, &empty_array).unwrap();
 
-
-
     let mut empty_array = serde_json::Value::Array(Vec::new())
-    .as_array()
-    .unwrap()
-    .clone();
+        .as_array()
+        .unwrap()
+        .clone();
 
     let writer = BufWriter::new(File::create("./storage/running.json").unwrap());
-    serde_json::to_writer_pretty(writer, &empty_array).unwrap();    
+    serde_json::to_writer_pretty(writer, &empty_array).unwrap();
 
     std::thread::sleep(std::time::Duration::from_secs(1));
-
 }
 
-fn max_server_check(num:i32) -> bool{
-
+fn max_server_check(num: i32) -> bool {
     let f = File::open("conf.json").unwrap();
     let v: serde_json::Value = serde_json::from_reader(f).unwrap();
 
-    let maxaccount =  v["binance"]["maxaccount"].as_i64().unwrap() as i32;
+    let maxaccount = v["binance"]["maxaccount"].as_i64().unwrap() as i32;
 
     let f_running = File::open("./storage/running.json").unwrap();
     let v_running: serde_json::Value = serde_json::from_reader(f_running).unwrap();
     let mut arrary_running = v_running.as_array().unwrap().clone();
     let num_run = arrary_running.len() as i32;
 
-    if num_run < maxaccount{
+    if num_run < maxaccount {
         return true;
-    }else {
-        return false
+    } else {
+        return false;
     }
-
 }
 
-
 fn updata_conf() {
-    println!(" update config ");    
+    println!(" update config ");
     let f = File::open("conf.json").unwrap();
     let v: serde_json::Value = serde_json::from_reader(f).unwrap();
     let serveraddress = v["binance"]["serveraddress"].clone();
@@ -387,13 +367,13 @@ pub fn creat_server(event: Event) -> Server {
 
     let (centrial_sender, server_reciver) = channel();
     let (server_sender, centrial_reciver) = channel();
-    
 
-    let e  = event.clone();
+    let e = event.clone();
     //update function just need to modify here
     if event.model == "AIP" {
-        let controler = thread::spawn(move || Server::AIP(server_reciver, server_sender,event.clone()));
-        
+        let controler =
+            thread::spawn(move || Server::AIP(server_reciver, server_sender, event.clone()));
+
         build_server(e, centrial_sender, centrial_reciver, controler)
     } else {
         let controler = thread::spawn(move || Server::AIP_30(server_reciver, server_sender));
@@ -508,7 +488,7 @@ fn updat_option_by_station(serveraddress: Value) {
                 array[0]["transactionHash"]
             );
 
-            //array must not in op finish 
+            //array must not in op finish
             for i in 0..array.clone().len() {
                 for j in 0..arrary_op_finish.clone().len() {
                     println!(
@@ -523,7 +503,7 @@ fn updat_option_by_station(serveraddress: Value) {
                 }
             }
 
-            //array must not in op running 
+            //array must not in op running
             for i in 0..array.clone().len() {
                 for j in 0..arrary_op_running.clone().len() {
                     println!(
@@ -740,22 +720,54 @@ fn build_option(option: ChainOption, server_list: Vec<Server>) {
 }
 
 // #[tokio::test]
-async fn send_token_to_moonbeam() {
+async fn send_token_to_moonbeam() {}
 
-}
+fn send_globe_info() {}
 
-
-fn send_globe_info(){
-
-}
-
-fn update_option_by_station_v2(serveraddress: Value){
+fn update_option_by_station_v2(serveraddress: Value) {
     //we use mysql to storage
     println!(" get option by station");
+    let client = reqwest::blocking::Client::builder()
+        .pool_idle_timeout(None)
+        .build()
+        .unwrap();
 
+    #[derive(Serialize)]
+    struct Node<'a> {
+        nodeaddress: &'a str,
+        body: &'a str,
+    }
+
+    println!(" ready to get chain event data  ");
+    let response = client
+        .get("http://127.0.0.1:5000/option")
+        .json(&Node {
+            nodeaddress: serveraddress.as_str().unwrap(),
+            body: "json",
+        })
+        .send();
+
+    println!(" get response status is  {:?}", response.is_ok());
+
+    if response.is_ok() {
+        let response = response.ok();
+        let mut array_result = response.unwrap().json::<serde_json::Value>();
+
+        if array_result.is_ok() {
+            let mut array = array_result.unwrap().as_array().unwrap().clone();
+
+            for i in 0..array.len() {
+                update_option_mysql(array[i].clone());
+            }
+        } else {
+            println!(" 网络错误,无法连接到监听节点 ");
+        }
+    } else {
+        println!("option  网络错误")
+    }
 }
 
-fn update_event_by_station_v2(serveraddress: Value){
+fn update_event_by_station_v2(serveraddress: Value) {
     //we use mysql to storage
     println!(" get event by station");
 
@@ -782,10 +794,9 @@ fn update_event_by_station_v2(serveraddress: Value){
     if response.is_ok() == true {
         let response = response.ok();
         let mut array_result = response.unwrap().json::<serde_json::Value>();
-        
+
         if array_result.is_ok() {
             let mut array = array_result.unwrap().as_array().unwrap().clone();
-            
 
             for i in 0..array.len() {
                 // let e = eternity_core_rust::event::Event {
@@ -803,60 +814,56 @@ fn update_event_by_station_v2(serveraddress: Value){
 
                 insert_mysql(array[i].clone());
             }
-
-
-        }else {
-            
+        } else {
             println!(" 网络错误,无法连接到监听节点 ");
-        
-        }    
-
-
-    }else {
+        }
+    } else {
         println!("network error");
     }
-
-    
 }
 
-
-
-fn insert_mysql(event:Value){
-
-
+fn insert_mysql(event: Value) {
     let is_exist = is_exist_in_mysql(event.clone());
-    println!(" is exist is {:?}",is_exist);
+    println!(" is exist is {:?}", is_exist);
     match is_exist {
         false => {
             println!("不需要更新")
-
         }
-        
+
         true => {
             println!("插入");
 
             insert_to_mysql(event.clone())
-
         }
     }
-
-    
 
     //数据库操作
     //1.查询user表
     //方式1：流式查询  数据逐行读取，数据不会存储在内存中
-
-    
- 
-
-
-    
 }
 
-fn is_exist_in_mysql(event: Value) -> bool{
+fn update_option_mysql(event: Value) {
+    let is_exist = is_exist_in_mysql(event.clone());
+    println!(" is exist is {:?}", is_exist);
+    match is_exist {
+        true => {
+            println!("不需要更新option")
+        }
+
+        false => {
+            println!("更新option");
+
+            update_option_to_mysql(event.clone())
+        }
+    }
+}
+
+fn is_opiton_in_event() {}
+
+fn is_exist_in_mysql(event: Value) -> bool {
     let url = "mysql://root:1416615127dj@localhost:3306/event";
-    let opts = Opts::from_url(url).unwrap();// 类型转换将 url 转为opts
-     //连接数据库 这里 老版本是直接传url 字符串即可 新版本21版要求必须为opts类型
+    let opts = Opts::from_url(url).unwrap(); // 类型转换将 url 转为opts
+                                             //连接数据库 这里 老版本是直接传url 字符串即可 新版本21版要求必须为opts类型
     let pool = Pool::new(opts).unwrap();
     let mut conn = pool.get_conn().unwrap();
 
@@ -866,37 +873,31 @@ fn is_exist_in_mysql(event: Value) -> bool{
     //1.查询user表
     //方式1：流式查询  数据逐行读取，数据不会存储在内存中
 
- 
+    println!("检查是否存在transaction = {:?}", e["transactionhash"].as_str().unwrap());
 
-    println!("要插入的数据是{:?}",e["transactionhash"].as_str().unwrap());
-    
-    let mut res:Result<Option<(String,String,String,f32,String,String,String,String)>,_> = conn
-        .exec_first(
-            r"select * from NodeAccountStatus where transactionhash = :transactionhash",
+    let mut res: Result<Option<(String, String, String, f32, String, String, String, String)>, _> =
+        conn.exec_first(
+            r"select * from NodeAccountStatus where transactionhash = :transactionhash and optionstatus = 'null' ",
             params! {
                 "transactionhash" => e["transactionhash"].as_str().unwrap()
             },
         );
-     println!("存在数据  {:?}",res); 
-    if res.unwrap() ==None{
+    println!("查询结果为  {:?}", res);
+    if res.unwrap() == None {
         println!("查询为空");
         return true;
-    }else{
+    } else {
         println!("已经存在数据");
         return false;
     }
-    
-
-
-
 }
 
-fn insert_to_mysql(event:Value){
-    #[derive(Debug,Clone)]
-    pub struct  Event{
+fn insert_to_mysql(event: Value) {
+    #[derive(Debug, Clone)]
+    pub struct Event {
         pub transactionhash: String,
         pub dexaddress: String,
-        pub serveraddress:String,
+        pub serveraddress: String,
         pub balance: f32,
         pub optionstatus: String,
         pub eventstatus: String,
@@ -904,26 +905,27 @@ fn insert_to_mysql(event:Value){
         pub useraddress: String,
     }
 
-    
     let e = event.clone();
-    
 
-    println!("transactionhash is {:?}", &e["transactionhash"].as_str().unwrap().to_string());
+    println!(
+        "transactionhash is {:?}",
+        &e["transactionhash"].as_str().unwrap().to_string()
+    );
 
-    let event = vec![Event{
+    let event = vec![Event {
         transactionhash: e["transactionhash"].as_str().unwrap().to_string(),
-         dexaddress: e["dexaddress"].as_str().unwrap().to_string(),
-         serveraddress:e["serveraddress"].as_str().unwrap().to_string(),
-         balance: e["balance"].as_f64().unwrap() as f32  ,
-         optionstatus: "pending".to_string(),
-         eventstatus: "pending".to_string(),
-         model: e["model"].as_str().unwrap().to_string(),
-         useraddress: e["useraddress"].as_str().unwrap().to_string(),
-   }]  ;
-   
-  let mut conn = init_mysql();
+        dexaddress: e["dexaddress"].as_str().unwrap().to_string(),
+        serveraddress: e["serveraddress"].as_str().unwrap().to_string(),
+        balance: e["balance"].as_f64().unwrap() as f32,
+        optionstatus: "null".to_string(),
+        eventstatus: "pending".to_string(),
+        model: e["model"].as_str().unwrap().to_string(),
+        useraddress: e["useraddress"].as_str().unwrap().to_string(),
+    }];
 
-  println!("插入数据{:?}",event[0].transactionhash);
+    let mut conn = init_mysql();
+
+    println!("插入数据{:?}", event[0].transactionhash);
     conn.exec_batch(
         "INSERT INTO NodeAccountStatus (transactionhash, dexaddress, serveraddress,balance,optionstatus,eventstatus,model,useraddress)
           VALUES (:transactionhash, :dexaddress, :serveraddress,:balance,:optionstatus,:eventstatus,:model,:useraddress)",
@@ -941,13 +943,34 @@ fn insert_to_mysql(event:Value){
     println!("数据更新完成");
 }
 
-fn init_mysql()->PooledConn{
+fn update_option_to_mysql(event:Value) {
+
+    //must be mut,otherwise it show error
+    let mut conn = init_mysql();
+
+    let event = event;    
+
+    println!("Option transactionhash is {:?} ",event["transactionhash"].as_str().unwrap().to_string());
+
+    let mut res: Result<Option<(String, String, String, f32, String, String, String, String)>, _> =
+        conn.exec_first(
+            r"update NodeAccountStatus SET optionstatus = 'pending' where optionstatus = 'null' and transactionhash= :transactionhash  ",
+            params! {
+                "transactionhash" => event["transactionhash"].as_str().unwrap().to_string()
+            },
+        );
+    println!("更新Option 数据  {:?}", res);
+
+  
+}
+
+fn init_mysql() -> PooledConn {
     println!("初始化muysql");
     //设置连接字符串
     let url = "mysql://root:1416615127dj@localhost:3306/event";
-    let opts = Opts::from_url(url).unwrap();// 类型转换将 url 转为opts
-     //连接数据库 这里 老版本是直接传url 字符串即可 新版本21版要求必须为opts类型
+    let opts = Opts::from_url(url).unwrap(); // 类型转换将 url 转为opts
+                                             //连接数据库 这里 老版本是直接传url 字符串即可 新版本21版要求必须为opts类型
     let pool = Pool::new(opts).unwrap();
     let mut conn = pool.get_conn().unwrap();
-    return conn; 
+    return conn;
 }
