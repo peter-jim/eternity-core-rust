@@ -25,18 +25,19 @@ use std::thread;
 
 fn main() -> Result<(), Box<dyn Error>> {
     clean_running();
+    clean_mysql_running();
     let mut server_list = Vec::new();
 
     loop {
         updata_conf();
-        let event_result = get_pending();
-        let option_result = get_option_code();
+        let event_result = get_pending_v2();
+        let option_result = get_option_code_v2();
 
         let num = server_list.len() as i32;
-        max_server_check(num);
+        max_server_check_v2(num);
 
         //
-        if max_server_check(num) == true {
+        if max_server_check_v2(num) == true {
             if event_result.is_ok() {
                 let event = event_result.ok().unwrap();
                 let id = creat_server(event);
@@ -131,6 +132,31 @@ fn max_server_check(num: i32) -> bool {
         return false;
     }
 }
+
+fn max_server_check_v2(num: i32)  -> bool{
+
+    let f = File::open("conf.json").unwrap();
+    let v: serde_json::Value = serde_json::from_reader(f).unwrap();
+    let maxaccount = v["binance"]["maxaccount"].as_i64().unwrap() ;
+
+    let mut conn = init_mysql();
+    let mut res:Vec<(String,String,String,f32,String,String,String,String)> = conn
+    .query(
+        "select * from NodeAccountStatus where eventstatus = 'running' "
+    ).unwrap();
+    println!("存在数据  {:?}",res); 
+    
+    let num_run = res.len() as i64;
+  
+
+
+    if num_run < maxaccount {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 
 fn updata_conf() {
     println!(" update config ");
@@ -356,6 +382,45 @@ pub fn get_pending() -> Result<Event, String> {
     }
 
     return Result::Err("no pending".to_string());
+}
+
+pub fn get_pending_v2() ->Result<Event, String>{
+    let mut conn = init_mysql();
+  
+    let mut res:Vec<(String,String,String,f32,String,String,String,String)> = conn
+    .query(
+        "select * from NodeAccountStatus where optionstatus = 'null' "
+    ).unwrap();
+    println!("存在数据  {:?}",res); 
+
+    
+    if res.len() > 0 {
+        println!("查询为空");
+        return Result::Err("no pending".to_string());
+    } else {
+        println!("已经存在数据");
+
+   
+
+        let event = Event{
+            balance:res[0].3 ,
+            blocknumber:1 ,
+            dexaddress:res[0].1.clone(),
+            model:res[0].6.clone(),
+            serveraddress:res[0].2.clone(),
+            transactionhash:res[0].0.clone(),
+            useraddress:res[0].7.clone(),
+            cheakcode:false,
+
+
+
+        };
+        return Result::Ok(event);
+    }
+
+    println!(" pending is {:?}" , res);
+    
+    
 }
 
 pub fn creat_server(event: Event) -> Server {
@@ -650,6 +715,45 @@ fn get_option_code() -> Result<ChainOption, String> {
     return Result::Err("no pending".to_string());
 }
 
+fn get_option_code_v2() ->Result<ChainOption, String>{
+    let mut conn = init_mysql();
+  
+    let mut res:Vec<(String,String,String,f32,String,String,String,String)> = conn
+    .query(
+        "select * from NodeAccountStatus where optionstatus = 'null' "
+    ).unwrap();
+    println!("存在数据  {:?}",res); 
+
+    
+    if res.len() > 0 {
+        println!("查询为空");
+        return Result::Err("no pending".to_string());
+    } else {
+        println!("已经存在数据");
+
+   
+
+        let event = ChainOption{
+         
+            blocknumber:1 ,
+           
+            model:res[0].6.clone(),
+            serveraddress:res[0].2.clone(),
+            transactionhash:res[0].0.clone(),
+            useraddress:res[0].7.clone(),
+            cheakcode:false,
+
+
+
+        };
+        return Result::Ok(event);
+    }
+
+    println!(" pending is {:?}" , res);
+    
+    
+}
+
 fn send_option_code_to_server() {}
 
 fn build_server(
@@ -709,6 +813,44 @@ fn build_server(
             break;
         }
     }
+
+    return server;
+}
+
+fn build_server_v2(
+    event: Event,
+    centrial_sender: Sender<OptionCode>,
+    centrial_reciver: Receiver<OptionCode>,
+    controler: thread::JoinHandle<()>,
+) -> Server{
+
+    let event_cheak = event.clone();
+    
+
+    let server = Server {
+        threading: controler,
+        server_reciver: centrial_reciver,
+        centrial_sender: centrial_sender,
+        balance: event.balance,
+        dexaddress: event.dexaddress,
+        model: event.model,
+        serveraddress: event.serveraddress,
+        transactionhash: event.transactionhash,
+        useraddress: event.useraddress,
+    };
+
+    let mut conn = init_mysql();
+    let mut res: Result<Option<(String, String, String, f32, String, String, String, String)>, _> =
+    conn.exec_first(
+        r"update NodeAccountStatus SET eventstatus = 'running' where transactionhash= :transactionhash  ",
+        params! {
+            "transactionhash" => event_cheak.transactionhash.clone()
+        },
+    );
+
+    println!(" 创建服务的transactionhash 是 {:?}",event_cheak.transactionhash.clone());
+    println!("创建服务 {:?}",res);
+
 
     return server;
 }
@@ -873,7 +1015,7 @@ fn is_exist_in_mysql(event: Value) -> bool {
     //1.查询user表
     //方式1：流式查询  数据逐行读取，数据不会存储在内存中
 
-    println!("检查是否存在transaction = {:?}", e["transactionhash"].as_str().unwrap());
+    // println!("检查是否存在transaction = {:?}", e["transactionhash"].as_str().unwrap());
 
     let mut res: Result<Option<(String, String, String, f32, String, String, String, String)>, _> =
         conn.exec_first(
@@ -882,12 +1024,12 @@ fn is_exist_in_mysql(event: Value) -> bool {
                 "transactionhash" => e["transactionhash"].as_str().unwrap()
             },
         );
-    println!("查询结果为  {:?}", res);
+    // println!("查询结果为  {:?}", res);
     if res.unwrap() == None {
-        println!("查询为空");
+        // println!("查询为空");
         return true;
     } else {
-        println!("已经存在数据");
+        // println!("已经存在数据");
         return false;
     }
 }
@@ -964,8 +1106,23 @@ fn update_option_to_mysql(event:Value) {
   
 }
 
+fn clean_mysql_running(){
+    let mut conn =  init_mysql();
+
+
+    let mut res: Result<Option<(String, String, String, f32, String, String, String, String)>, _> =
+    conn.exec_first(
+        r"update NodeAccountStatus SET eventstatus = 'pending' where eventstatus = 'running'  ",
+        params! {
+           ""=>""
+        },
+    );
+println!("更新Option 数据  {:?}", res);
+}
+
+
 fn init_mysql() -> PooledConn {
-    println!("初始化muysql");
+    // println!("初始化muysql");
     //设置连接字符串
     let url = "mysql://root:1416615127dj@localhost:3306/event";
     let opts = Opts::from_url(url).unwrap(); // 类型转换将 url 转为opts

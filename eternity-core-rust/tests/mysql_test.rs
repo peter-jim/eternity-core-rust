@@ -108,16 +108,24 @@ fn test_select_nodeaccountstatus(){
             "balance" => 100.0
         },
     );
+    println!("存在数据  {:?}",res.unwrap().unwrap()); 
+
+    
+
+    let mut res:Vec<(String,String,String,f32,String,String,String,String)> = conn
+    .query(
+        "select * from NodeAccountStatus where optionstatus = 'null' and transactionhash = ".to_string() +&r"'0x8ce9cb9ade8e8fe3dba95c0bc7efa9c157bafbb690d1bbec3f70f4ff8ca5856f'".to_string(), 
+    ).unwrap();
     println!("存在数据  {:?}",res); 
 
-    let mut res:Result<Option<(String,i32,String,String,String,String,f32)>> = conn
-    .exec_first(
-        "select * from userBuy where model = :model",
-        params! {
-            "model" => "AIP".to_string()
-        },
-    );
-    println!("存在数据  {:?}",res); 
+    let sql = "select * from NodeAccountStatus where optionstatus = 'null' and transactionhash = ".to_string() +&" '0x8ce9cb9ade8e8fe3dba95c0bc7efa9c157bafbb690d1bbec3f70f4ff8ca5856f' ".to_string();
+    println!("{:?}",sql)
+
+    
+
+
+
+
 }
 
 fn mysql_query(){
