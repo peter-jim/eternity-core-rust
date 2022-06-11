@@ -119,6 +119,7 @@ pub fn insert_event_mysql(event: Value) {
         })
     ).unwrap();
     println!("数据更新完成");
+    
 }
 
 pub fn update_option_null(event: Value) {

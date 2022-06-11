@@ -4,6 +4,7 @@ use eternity_core_rust::event::*;
 use eternity_core_rust::market::*;
 use eternity_core_rust::mpscanaly::*;
 use eternity_core_rust::server::*;
+use eternity_core_rust::mysql::*;
 use hmac::digest::consts::False;
 use hmac::digest::consts::True;
 use mysql::from_row;
@@ -22,6 +23,7 @@ use std::sync::mpsc::channel;
 use std::sync::mpsc::Receiver;
 use std::sync::mpsc::Sender;
 use std::thread;
+
 
 fn main() -> Result<(), Box<dyn Error>> {
     clean_running();
@@ -238,13 +240,15 @@ fn updata_event_by_station(serveraddress: Value) {
             for i in 0..array.len() {
                 let e = eternity_core_rust::event::Event {
                     balance: array[i]["balance"].as_f64().unwrap() as f32,
-                    blocknumber: array[i]["blocknumber"].as_f64().unwrap() as i32,
+                    
                     dexaddress: array[i]["dexaddress"].as_str().unwrap().to_string(),
                     model: array[i]["model"].as_str().unwrap().to_string(),
                     serveraddress: array[i]["serveraddress"].as_str().unwrap().to_string(),
                     transactionhash: array[i]["transactionHash"].as_str().unwrap().to_string(),
                     useraddress: array[i]["useraddress"].as_str().unwrap().to_string(),
-                    cheakcode: true,
+                    
+                    optionstatus: todo!(),
+                    eventstatus: todo!(),
                 };
 
                 array_event.push(e);
@@ -303,7 +307,7 @@ fn updata_event_by_station(serveraddress: Value) {
                         // println!("repeate_array 是{:?}",repeate_array[i]["transactionHash"]);
                         // println!("array 剩 {:?}", array);
                         // array.remove(j);
-                        array_event[j].cheakcode = false;
+                        // array_event[j].cheakcode = false;
                     }
                 }
             }
@@ -312,9 +316,9 @@ fn updata_event_by_station(serveraddress: Value) {
 
             if array.len() != 0 {
                 for i in 0..array_event.len() {
-                    if array_event[i].cheakcode == true {
-                        arrary_pending.push(array[i].clone());
-                    }
+                    // if array_event[i].cheakcode == true {
+                    //     arrary_pending.push(array[i].clone());
+                    // }
                 }
 
                 // write out the file
@@ -394,6 +398,8 @@ pub fn get_pending() -> Result<Event, String> {
                 .as_str()
                 .unwrap()
                 .to_string(),
+            optionstatus: todo!(),
+            eventstatus: todo!(),
 
         };
         return Result::Ok(event);
@@ -1036,7 +1042,6 @@ fn is_exist_in_mysql(event: Value) -> bool {
         return false;
     }
 }
-
 
 
 
