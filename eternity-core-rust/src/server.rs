@@ -575,7 +575,7 @@ fn build_server(
     };
 
     //更新到数据库
-    update_event_pending(server);
+    update_event_pending(event_cheak.transactionhash);
 
     return server
 }

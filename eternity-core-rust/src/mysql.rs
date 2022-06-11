@@ -188,16 +188,14 @@ pub fn update_option_running(event: Value) {
     println!("更新Option 数据  {:?}", res);
 }
 
-pub fn update_event_pending(event: Server) {
+pub fn update_event_pending(event: String) {
     let mut conn = init_mysql();
-
-    let event = event;
 
     let  res: Result<Option<(String, String, String, f32, String, String, String, String)>, _> =
         conn.exec_first(
             r"update NodeAccountStatus SET eventstatus = 'running' where eventstatus = 'pending' and transactionhash= :transactionhash  ",
             params! {
-                "transactionhash" => event.transactionhash.to_string()
+                "transactionhash" => event.to_string()
             },
         );
     
@@ -295,7 +293,7 @@ fn process_event(){
             let event = re.ok().unwrap();
         }
         false => {
-            
+            // return Result::Err("option error".to_string());
         },
     }
 }
@@ -307,9 +305,9 @@ fn process_option() -> Result<Server,String>{
     match re.is_ok() {
         true => {
             let event = re.ok().unwrap();
-            let id = create_server(event).unwrap();
+            let id = create_server(event);
             
-                return Result::Ok(id)
+            return Result::Ok(id.unwrap())
             
         }
         false => {
