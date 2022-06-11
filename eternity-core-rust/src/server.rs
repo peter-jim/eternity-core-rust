@@ -333,51 +333,65 @@ fn create_aip(){
 }
 
 fn recv_main(server_reciver: &Receiver<OptionCode>,event:Event)-> bool{
-    let rev = server_reciver.recv().unwrap();
+    let rev = server_reciver.recv();
+
     match rev {
-        OptionCode::Shoutdown => {
-            return true;
-            //取消所有的订单
+        Ok(_) => {
+            println!("成功接收主线程");
 
-            //检查所有的订单是否取消
 
-            //如果因为网络问题，没有取消则继续取消。
-
-            //3次发送 网络错误
-        }
-        OptionCode::AllBalance => {
-            println!("xxx");
-            return true;
-
-            //获取账户余额
-
-            //通过send发送回去
-        }
-        OptionCode::AllOrder => {
-            println!("xxx") ;
-            return true;
-            //获取账户订单
-
-            //通过send发送回去
-        }
-        OptionCode::ErrorStatus => {
-            println!("xxx");
-            //返回ErrorStatus列表
-            return true;
-        }
-
-        OptionCode::Withdraw => {
-            println!("启动提款线程");
-            let result =  send_event_to_moonbeam();
-            //返回ErrorStatus列表
-             //step 1，检查返回状态
-            //step 2. 关闭服务。
-            update(event);
-            return true;
-
-        }
+            match rev.unwrap() {
+                OptionCode::Shoutdown => {
+                    return true;
+                    //取消所有的订单
         
+                    //检查所有的订单是否取消
+        
+                    //如果因为网络问题，没有取消则继续取消。
+        
+                    //3次发送 网络错误
+                }
+                OptionCode::AllBalance => {
+                    println!("xxx");
+                    return true;
+        
+                    //获取账户余额
+        
+                    //通过send发送回去
+                }
+                OptionCode::AllOrder => {
+                    println!("xxx") ;
+                    return true;
+                    //获取账户订单
+        
+                    //通过send发送回去
+                }
+                OptionCode::ErrorStatus => {
+                    println!("xxx");
+                    //返回ErrorStatus列表
+                    return true;
+                }
+        
+                OptionCode::Withdraw => {
+                    println!("启动提款线程");
+                    let result =  send_event_to_moonbeam();
+                    //返回ErrorStatus列表
+                     //step 1，检查返回状态
+                    //step 2. 关闭服务。
+                    update(event);
+                    return true;
+        
+                }
+                
+            }
+        
+
+        },
+        Err(_) => {
+            println!("接收主线程出错")
+        },
     }
+
 
     return false; 
 }
@@ -521,17 +535,7 @@ pub fn create_server(event:Event) -> Result<Server,String>{
     let (server_sender, centrial_reciver) = channel();
 
     let e = event.clone();
-    //update function just need to modify here
-    // if event.model == "AIP" {
-    //     let controler =
-    //         thread::spawn(move || Server::AIP(server_reciver, server_sender, event.clone()));
-
-    //     build_server(e, centrial_sender, centrial_reciver, controler)
-    // } else {
-    //     let controler = thread::spawn(move || Server::AIP_30(server_reciver, server_sender));
-    //     build_server(event, centrial_sender, centrial_reciver, controler)
-    // }
-
+ 
     match event.model.as_str() {
         "AIP" => {
             println!("创建服务");
@@ -544,6 +548,7 @@ pub fn create_server(event:Event) -> Result<Server,String>{
         //如果我们有新的程序更新，再这添加即可。
 
         _ =>{
+            println!("create error");
             return Result::Err("create error".to_string());
         }
     }
@@ -559,9 +564,6 @@ fn build_server(
     controler: thread::JoinHandle<()>,
 ) -> Server{
 
-    let event_cheak = event.clone();
-    
-
     let server = Server {
         threading: controler,
         server_reciver: centrial_reciver,
@@ -570,12 +572,12 @@ fn build_server(
         dexaddress: event.dexaddress,
         model: event.model,
         serveraddress: event.serveraddress,
-        transactionhash: event.transactionhash,
+        transactionhash: event.transactionhash.clone(),
         useraddress: event.useraddress,
     };
 
     //更新到数据库
-    update_event_pending(event_cheak.transactionhash);
+    update_event_pending(event.transactionhash);
 
     return server
 }

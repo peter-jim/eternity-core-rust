@@ -29,14 +29,16 @@ pub fn clean_mysql_running() {
     let mut conn = init_mysql();
 
     //当机器重新启动时候，更新mysql的状态,running 状态的程序需要复原，到再次重启。
-    let res: Result<Option<(String, String, String, f32, String, String, String, String)>, _> =
-        conn.exec_first(
-            r"update NodeAccountStatus SET eventstatus = 'pending' where eventstatus = 'running'  ",
-            params! {
-               ""=>""
-            },
-        );
+    let res:Vec<(String,String,String,f32,String,String,String,String)> =
+        conn.query(
+            "update NodeAccountStatus SET eventstatus = 'pending' where eventstatus = 'running'  "
+        ).unwrap();
     // println!("更新Option 数据  {:?}", res);
+
+    let res:Vec<(String,String,String,f32,String,String,String,String)> =conn.query(
+        "update NodeAccountStatus SET optionstatus = 'pending' where optionstatus = 'running'  "
+    ).unwrap();
+
 }
 
 //根据transaction hash 判断
@@ -51,7 +53,7 @@ fn is_exist_in_mysql(event: Value) -> bool {
 
     let  res: Result<Option<(String, String, String, f32, String, String, String, String)>, _> =
         conn.exec_first(
-            r"select * from NodeAccountStatus where transactionhash = :transactionhash and optionstatus = 'null' ",
+            r"select * from NodeAccountStatus where transactionhash = :transactionhash  ",
             params! {
                 "transactionhash" => e["transactionhash"].as_str().unwrap()
             },
@@ -70,7 +72,7 @@ fn is_exist_in_mysql(event: Value) -> bool {
 pub fn process_station_transaction(event: Value) {
     //true 代表为空， false 代表为存在数据。
     let is_exist = is_exist_in_mysql(event.clone());
-    println!(" is exist is {:?}", is_exist);
+    println!("{:?} is exist is {:?}  ", event["transactionhash"].as_str().unwrap().to_string()   ,is_exist);
     match is_exist {
         false => {
             println!("不需要更新")
@@ -91,6 +93,11 @@ pub fn insert_event_mysql(event: Value) {
     println!(
         "transactionhash is {:?}",
         &e["transactionhash"].as_str().unwrap().to_string()
+    );
+
+    println!(
+        "e is {:?}",
+        &e
     );
 
     let event = vec![Event {
@@ -244,8 +251,8 @@ pub fn get_event_pending()->Result<Event, String>{
                 serveraddress:res[0].2.clone(),
                 transactionhash:res[0].0.clone(),
                 useraddress:res[0].7.clone(),
-                optionstatus: todo!(),
-                eventstatus: todo!(),
+                optionstatus: "pending".to_string(),
+                eventstatus: "pending".to_string(),
                 
             };
             return Result::Ok(event)
@@ -286,21 +293,24 @@ pub fn get_event_pending()->Result<Event, String>{
 }
 
 //获取一条 待处理的event 
-fn process_event(){
+pub fn process_event()-> Result<Server,String>{
     let re = get_event_pending();
     match re.is_ok() {
         true => {
             let event = re.ok().unwrap();
+            let id = create_server(event);
+            
+            return Result::Ok(id.unwrap())
         }
         false => {
-            // return Result::Err("option error".to_string());
+            return Result::Err("procession error".to_string());
         },
     }
 }
 
 
 //获取一条待处理的option
-fn process_option() -> Result<Server,String>{
+pub fn process_option() -> Result<Server,String>{
     let re = get_option_pending();
     match re.is_ok() {
         true => {

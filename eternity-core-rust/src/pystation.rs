@@ -12,12 +12,12 @@ use serde_json::Value;
 
 pub fn update_option_by_station(serveraddress: Value) {
     let re = get_option_by_station(serveraddress);
-    process_event_response(re);
+    process_option_response(re);
 }
 
 pub fn update_event_by_station(serveraddress: Value) {
     let re =get_event_by_station(serveraddress);
-    process_option_response(re);
+    process_event_response(re);
 }
 
 //从链下可信节点获取 event 数组，返回response
@@ -74,6 +74,8 @@ fn process_event_response(response: Result<Response, Error>) {
         true => {
             let response = response.ok();
             let array_result = response.unwrap().json::<serde_json::Value>();
+
+
             if array_result.is_ok() {
                 let array = array_result.unwrap().as_array().unwrap().clone();
 
