@@ -65,7 +65,7 @@ fn is_exist_in_mysql(event: Value) -> bool {
 }
 
 //处理 链下安全节点获取到的event事件，并判断其是否需要更新到本地状态。
-fn process_event_transaction(event: Value) {
+pub fn process_event_transaction(event: Value) {
     //true 代表为空， false 代表为存在数据。
     let is_exist = is_exist_in_mysql(event.clone());
     println!(" is exist is {:?}", is_exist);
@@ -81,6 +81,8 @@ fn process_event_transaction(event: Value) {
         }
     }
 }
+
+
 
 pub fn insert_event_mysql(event: Value) {
     let e = event.clone();
