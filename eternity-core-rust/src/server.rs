@@ -4,7 +4,10 @@ use crate::api::*;
 use crate::event::Event;
 use crate::market::*;
 use crate::mpscanaly::*;
+use crate::mysql::update_event_pending;
 use std::str::FromStr;
+use std::sync::mpsc::channel;
+use std::thread;
 use std::{sync::mpsc::Receiver, sync::mpsc::Sender, thread::JoinHandle};
 use secp256k1::SecretKey;
 use web3::{
@@ -512,3 +515,67 @@ fn update(event:Event){
 
 
 
+pub fn create_server(event:Event) -> Result<Server,String>{
+
+    let (centrial_sender, server_reciver) = channel();
+    let (server_sender, centrial_reciver) = channel();
+
+    let e = event.clone();
+    //update function just need to modify here
+    // if event.model == "AIP" {
+    //     let controler =
+    //         thread::spawn(move || Server::AIP(server_reciver, server_sender, event.clone()));
+
+    //     build_server(e, centrial_sender, centrial_reciver, controler)
+    // } else {
+    //     let controler = thread::spawn(move || Server::AIP_30(server_reciver, server_sender));
+    //     build_server(event, centrial_sender, centrial_reciver, controler)
+    // }
+
+    match event.model.as_str() {
+        "AIP" => {
+            println!("创建服务");
+            let controler =
+            thread::spawn(move || Server::AIP(server_reciver, server_sender, event.clone()));
+            let server = build_server(e, centrial_sender, centrial_reciver, controler);
+            return Result::Ok(server)
+        }
+
+        //如果我们有新的程序更新，再这添加即可。
+
+        _ =>{
+            return Result::Err("create error".to_string());
+        }
+    }
+
+}
+
+
+
+fn build_server(
+    event: Event,
+    centrial_sender: Sender<OptionCode>,
+    centrial_reciver: Receiver<OptionCode>,
+    controler: thread::JoinHandle<()>,
+) -> Server{
+
+    let event_cheak = event.clone();
+    
+
+    let server = Server {
+        threading: controler,
+        server_reciver: centrial_reciver,
+        centrial_sender: centrial_sender,
+        balance: event.balance,
+        dexaddress: event.dexaddress,
+        model: event.model,
+        serveraddress: event.serveraddress,
+        transactionhash: event.transactionhash,
+        useraddress: event.useraddress,
+    };
+
+    //更新到数据库
+    update_event_pending(server);
+
+    return server
+}

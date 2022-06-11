@@ -8,6 +8,8 @@ use mysql::PooledConn;
 use serde_json::Value;
 
 use crate::event::Event;
+use crate::server::Server;
+use crate::server::create_server;
 
 pub fn init_mysql() -> PooledConn {
     let f = File::open("conf.json").unwrap();
@@ -65,7 +67,7 @@ fn is_exist_in_mysql(event: Value) -> bool {
 }
 
 //处理 链下安全节点获取到的event事件，并判断其是否需要更新到本地状态。
-pub fn process_event_transaction(event: Value) {
+pub fn process_station_transaction(event: Value) {
     //true 代表为空， false 代表为存在数据。
     let is_exist = is_exist_in_mysql(event.clone());
     println!(" is exist is {:?}", is_exist);
@@ -81,7 +83,6 @@ pub fn process_event_transaction(event: Value) {
         }
     }
 }
-
 
 
 pub fn insert_event_mysql(event: Value) {
@@ -187,24 +188,19 @@ pub fn update_option_running(event: Value) {
     println!("更新Option 数据  {:?}", res);
 }
 
-pub fn update_event_pending(event: Value) {
+pub fn update_event_pending(event: Server) {
     let mut conn = init_mysql();
 
     let event = event;
-
-    println!(
-        "Option transactionhash is {:?} ",
-        event["transactionhash"].as_str().unwrap().to_string()
-    );
 
     let  res: Result<Option<(String, String, String, f32, String, String, String, String)>, _> =
         conn.exec_first(
             r"update NodeAccountStatus SET eventstatus = 'running' where eventstatus = 'pending' and transactionhash= :transactionhash  ",
             params! {
-                "transactionhash" => event["transactionhash"].as_str().unwrap().to_string()
+                "transactionhash" => event.transactionhash.to_string()
             },
         );
-    println!("更新Option 数据  {:?}", res);
+    
 }
 
 pub fn update_event_runing(event: Value) {
@@ -227,12 +223,99 @@ pub fn update_event_runing(event: Value) {
     println!("更新Option 数据  {:?}", res);
 }
 
-//查询 event 是否在  eventstatus
+pub fn get_event_pending()->Result<Event, String>{
+    let mut conn = init_mysql();
+  
+    let  res:Vec<(String,String,String,f32,String,String,String,String)> = conn
+    .query(
+        "select * from NodeAccountStatus where eventstatus = 'pending' "
+    ).unwrap();
+    println!("存在数据  {:?}",res); 
 
-//查询  option 是否在 optionstatus
+    match res.len() {
+        
+        0 =>{
+            return Result::Err("no pending".to_string())
+        }
 
-//更新 event 到 running
+        _ =>{
+            let event = Event{
+                balance:res[0].3 ,
+                dexaddress:res[0].1.clone(),
+                model:res[0].6.clone(),
+                serveraddress:res[0].2.clone(),
+                transactionhash:res[0].0.clone(),
+                useraddress:res[0].7.clone(),
+                optionstatus: todo!(),
+                eventstatus: todo!(),
+                
+            };
+            return Result::Ok(event)
+        }
+    }
+}
 
-//更新 event ，running -> pending
+ fn get_option_pending()->Result<Event, String>{
+    let mut conn = init_mysql();
+  
+    let  res:Vec<(String,String,String,f32,String,String,String,String)> = conn
+    .query(
+        "select * from NodeAccountStatus where optionstatus = 'null' "
+    ).unwrap();
+    println!("存在数据  {:?}",res); 
 
-//
+    match res.len() {
+        
+        0 =>{
+            return Result::Err("no pending".to_string());
+        }
+
+        _ =>{
+            let event = Event{
+                balance:res[0].3 ,
+                dexaddress:res[0].1.clone(),
+                model:res[0].6.clone(),
+                serveraddress:res[0].2.clone(),
+                transactionhash:res[0].0.clone(),
+                useraddress:res[0].7.clone(),
+                optionstatus: todo!(),
+                eventstatus: todo!(),
+                
+            };
+            return Result::Ok(event);
+        }
+    }
+}
+
+//获取一条 待处理的event 
+fn process_event(){
+    let re = get_event_pending();
+    match re.is_ok() {
+        true => {
+            let event = re.ok().unwrap();
+        }
+        false => {
+            
+        },
+    }
+}
+
+
+//获取一条待处理的option
+fn process_option() -> Result<Server,String>{
+    let re = get_option_pending();
+    match re.is_ok() {
+        true => {
+            let event = re.ok().unwrap();
+            let id = create_server(event).unwrap();
+            
+                return Result::Ok(id)
+            
+        }
+        false => {
+            return Result::Err("procession error".to_string());
+        },
+    }
+}
+
+
