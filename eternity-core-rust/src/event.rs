@@ -7,16 +7,16 @@ pub enum EventCode{
 
 }
 
-#[derive(Debug,Clone)]
-pub struct  Event{
-    pub balance: f32,
-    pub blocknumber: i32,
-    pub dexaddress: String,
-    pub model: String,
-    pub serveraddress: String,
+#[derive(Debug, Clone)]
+pub struct Event {
     pub transactionhash: String,
+    pub dexaddress: String,
+    pub serveraddress: String,
+    pub balance: f32,
+    pub optionstatus: String,
+    pub eventstatus: String,
+    pub model: String,
     pub useraddress: String,
-    pub cheakcode: bool,
 }
 
 

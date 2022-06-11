@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let option_result = get_option_code_v2();
 
         let num = server_list.len() as i32;
-        max_server_check_v2(num);
+        let c= max_server_check_v2(num);
 
         //
         if max_server_check_v2(num) == true {
@@ -48,6 +48,24 @@ fn main() -> Result<(), Box<dyn Error>> {
         } else {
             println!("目前的最大负载数已达上限请更新服务器配置，并在conf.json中扩容");
         }
+
+        // match c {
+        //     true => {
+                
+        //         if &event_result.clone().is_ok() {
+        //             let event = event_result.ok().unwrap();
+        //             let id = creat_server(event);
+        //             server_list.push(id);
+        //         } else {
+        //             println!("没有新业务，目前有{:?}个线程在运行", server_list.len());
+        //         }
+        //     },
+
+        //     false => {
+        //         println!("目前的最大负载数已达上限请更新服务器配置，并在conf.json中扩容");
+        //     }  
+        // }
+
 
         if option_result.is_ok() {
             let option = option_result.ok().unwrap();
@@ -358,7 +376,7 @@ pub fn get_pending() -> Result<Event, String> {
         // println!("array pending balance {:?} ", arrary_pending[0]["balance"]);
         let event = Event {
             balance: arrary_pending[0]["balance"].as_f64().unwrap() as f32,
-            blocknumber: arrary_pending[0]["blocknumber"].as_f64().unwrap() as i32,
+           
             dexaddress: arrary_pending[0]["dexaddress"]
                 .as_str()
                 .unwrap()
@@ -376,7 +394,7 @@ pub fn get_pending() -> Result<Event, String> {
                 .as_str()
                 .unwrap()
                 .to_string(),
-            cheakcode: true,
+
         };
         return Result::Ok(event);
     }
@@ -400,20 +418,17 @@ pub fn get_pending_v2() ->Result<Event, String>{
     } else {
         println!("已经存在数据");
 
-   
-
         let event = Event{
             balance:res[0].3 ,
-            blocknumber:1 ,
+            
             dexaddress:res[0].1.clone(),
             model:res[0].6.clone(),
             serveraddress:res[0].2.clone(),
             transactionhash:res[0].0.clone(),
             useraddress:res[0].7.clone(),
-            cheakcode:false,
-
-
-
+            optionstatus: todo!(),
+            eventstatus: todo!(),
+            
         };
         return Result::Ok(event);
     }
@@ -941,18 +956,6 @@ fn update_event_by_station_v2(serveraddress: Value) {
             let mut array = array_result.unwrap().as_array().unwrap().clone();
 
             for i in 0..array.len() {
-                // let e = eternity_core_rust::event::Event {
-                //     balance: array[i]["balance"].as_f64().unwrap() as f32,
-                //     blocknumber: array[i]["blocknumber"].as_f64().unwrap() as i32,
-                //     dexaddress: array[i]["dexaddress"].as_str().unwrap().to_string(),
-                //     model: array[i]["model"].as_str().unwrap().to_string(),
-                //     serveraddress: array[i]["serveraddress"].as_str().unwrap().to_string(),
-                //     transactionhash: array[i]["transactionHash"].as_str().unwrap().to_string(),
-                //     useraddress: array[i]["useraddress"].as_str().unwrap().to_string(),
-                //     cheakcode: true,
-                // };
-
-                // array_event.push(e);
 
                 insert_mysql(array[i].clone());
             }
@@ -1034,6 +1037,9 @@ fn is_exist_in_mysql(event: Value) -> bool {
     }
 }
 
+
+
+
 fn insert_to_mysql(event: Value) {
     #[derive(Debug, Clone)]
     pub struct Event {
@@ -1085,6 +1091,8 @@ fn insert_to_mysql(event: Value) {
     println!("数据更新完成");
 }
 
+
+
 fn update_option_to_mysql(event:Value) {
 
     //must be mut,otherwise it show error
@@ -1119,7 +1127,6 @@ fn clean_mysql_running(){
     );
 println!("更新Option 数据  {:?}", res);
 }
-
 
 fn init_mysql() -> PooledConn {
     // println!("初始化muysql");
