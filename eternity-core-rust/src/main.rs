@@ -37,11 +37,38 @@ fn main() -> Result<(), Box<dyn Error>> {
         let v: serde_json::Value = serde_json::from_reader(f).unwrap();
         let serveraddress = v["binance"]["serveraddress"].clone();
 
-        update_event_by_station(serveraddress);
+        update_event_by_station(serveraddress.clone());
+        update_option_by_station(serveraddress);
+
+        let mut server_list = Vec::new();
         
         let server = process_event();
+        let option = process_option();
 
-        //发送线程
+        //处理返回server,将结果添加至list表。
+        match server {
+            Ok(_) => {
+                server_list.push(server.unwrap());
+            },
+            Err(_) => {
+                println!("process event 返回{:?}",server.err())
+            },
+        }
+
+        match option {
+            Ok(_) => {
+                let e = option.unwrap().transactionhash;
+                for i in 0..server_list.len(){
+
+                }
+                server.unwrap().centrial_sender.clone().send(OptionCode::Withdraw);
+                
+            },
+            Err(_) => {
+                println!("process option 返回{:?}",option.err())
+            },
+        }
+        
         
 
         // let event_result = get_pending_v2();

@@ -5,6 +5,8 @@ use crate::event::Event;
 use crate::market::*;
 use crate::mpscanaly::*;
 use crate::mysql::update_event_pending;
+use crate::mysql::update_event_runing;
+use crate::mysql::update_option_running;
 use std::str::FromStr;
 use std::sync::mpsc::channel;
 use std::thread;
@@ -378,7 +380,11 @@ fn recv_main(server_reciver: &Receiver<OptionCode>,event:Event)-> bool{
                     //返回ErrorStatus列表
                      //step 1，检查返回状态
                     //step 2. 关闭服务。
-                    update(event);
+                    // update(event);
+                    update_event_runing(event.transactionhash.clone());
+                    update_option_running(event.transactionhash.clone());
+
+                    
                     return true;
         
                 }

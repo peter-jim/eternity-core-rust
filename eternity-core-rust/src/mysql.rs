@@ -174,25 +174,18 @@ pub fn update_option_pending(event: Value) {
     println!("更新Option 数据  {:?}", res);
 }
 
-pub fn update_option_running(event: Value) {
+pub fn update_option_running(event: String) {
     //must be mut,otherwise it show error
     let mut conn = init_mysql();
-
-    let event = event;
-
-    println!(
-        "Option transactionhash is {:?} ",
-        event["transactionhash"].as_str().unwrap().to_string()
-    );
 
     let  res: Result<Option<(String, String, String, f32, String, String, String, String)>, _> =
         conn.exec_first(
             r"update NodeAccountStatus SET optionstatus = 'finish' where optionstatus = 'running' and transactionhash= :transactionhash  ",
             params! {
-                "transactionhash" => event["transactionhash"].as_str().unwrap().to_string()
+                "transactionhash" =>  event.to_string()
             },
         );
-    println!("更新Option 数据  {:?}", res);
+    
 }
 
 pub fn update_event_pending(event: String) {
@@ -208,24 +201,16 @@ pub fn update_event_pending(event: String) {
     
 }
 
-pub fn update_event_runing(event: Value) {
+pub fn update_event_runing(event: String) {
     let mut conn = init_mysql();
-
-    let event = event;
-
-    println!(
-        "Option transactionhash is {:?} ",
-        event["transactionhash"].as_str().unwrap().to_string()
-    );
 
     let  res: Result<Option<(String, String, String, f32, String, String, String, String)>, _> =
         conn.exec_first(
             r"update NodeAccountStatus SET eventstatus = 'finish' where eventstatus = 'running' and transactionhash= :transactionhash  ",
             params! {
-                "transactionhash" => event["transactionhash"].as_str().unwrap().to_string()
+                "transactionhash" => event.to_string()
             },
         );
-    println!("更新Option 数据  {:?}", res);
 }
 
 pub fn get_event_pending()->Result<Event, String>{
