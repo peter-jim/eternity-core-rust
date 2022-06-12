@@ -152,23 +152,17 @@ pub fn update_option_null(event: Value) {
     println!("更新Option 数据  {:?}", res);
 }
 
-pub fn update_option_pending(event: Value) {
+pub fn update_option_pending(event: String) {
     //更新pending -> running
     //must be mut,otherwise it show error
     let mut conn = init_mysql();
 
-    let event = event;
-
-    println!(
-        "Option transactionhash is {:?} ",
-        event["transactionhash"].as_str().unwrap().to_string()
-    );
 
     let  res: Result<Option<(String, String, String, f32, String, String, String, String)>, _> =
         conn.exec_first(
             r"update NodeAccountStatus SET optionstatus = 'running' where optionstatus = 'pending' and transactionhash= :transactionhash  ",
             params! {
-                "transactionhash" => event["transactionhash"].as_str().unwrap().to_string()
+                "transactionhash" => event.to_string()
             },
         );
     println!("更新Option 数据  {:?}", res);
@@ -250,7 +244,7 @@ pub fn get_event_pending()->Result<Event, String>{
   
     let  res:Vec<(String,String,String,f32,String,String,String,String)> = conn
     .query(
-        "select * from NodeAccountStatus where optionstatus = 'null' "
+        "select * from NodeAccountStatus where optionstatus = 'pending' and eventstatus = 'running' "
     ).unwrap();
     println!("存在数据  {:?}",res); 
 
@@ -268,10 +262,12 @@ pub fn get_event_pending()->Result<Event, String>{
                 serveraddress:res[0].2.clone(),
                 transactionhash:res[0].0.clone(),
                 useraddress:res[0].7.clone(),
-                optionstatus: todo!(),
-                eventstatus: todo!(),
+                optionstatus: "pending".to_string(),
+                eventstatus: "running".to_string(),
                 
             };
+
+            update_option_pending(event.transactionhash.clone());
             return Result::Ok(event);
         }
     }
@@ -288,25 +284,25 @@ pub fn process_event()-> Result<Server,String>{
             return Result::Ok(id.unwrap())
         }
         false => {
-            return Result::Err("procession error".to_string());
+            return Result::Err("procession error,no pending".to_string());
         },
     }
 }
 
 
 //获取一条待处理的option
-pub fn process_option() -> Result<Server,String>{
+pub fn process_option() -> Result<Event,String>{
     let re = get_option_pending();
     match re.is_ok() {
         true => {
-            let event = re.ok().unwrap();
-            let id = create_server(event);
+            let event = re.ok().unwrap();  //already update option pending
             
-            return Result::Ok(id.unwrap())
+            
+            return Result::Ok(event)
             
         }
         false => {
-            return Result::Err("procession error".to_string());
+            return Result::Err("procession no pending".to_string());
         },
     }
 }

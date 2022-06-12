@@ -59,10 +59,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             Ok(_) => {
                 let e = option.unwrap().transactionhash;
                 for i in 0..server_list.len(){
-
-                }
-                server.unwrap().centrial_sender.clone().send(OptionCode::Withdraw);
-                
+                    if e == server_list[i].transactionhash{
+                        server_list[i].centrial_sender.clone().send(OptionCode::Withdraw);
+                    }
+                }         
             },
             Err(_) => {
                 println!("process option 返回{:?}",option.err())
