@@ -14,7 +14,7 @@ mod tests {
     use std::io::BufWriter;
     use std::io::BufReader;
     extern crate serde;
-extern crate serde_json;
+    extern crate serde_json;
 
     struct Server{
         quant_id:String,

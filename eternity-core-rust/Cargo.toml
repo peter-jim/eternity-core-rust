@@ -36,6 +36,8 @@ time = { version = "0.3.5", features = ["macros"] }
 
 mysql = "*"
 
+chrono = { version = "0.4" }
+
 [dev-dependencies]
 # For examples
 

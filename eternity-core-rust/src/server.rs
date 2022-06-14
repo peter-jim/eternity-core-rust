@@ -45,14 +45,20 @@ pub struct OrderStatus {
 }
 
 pub fn inital_account() -> Account {
-    let api_key = Some("y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx".into());
+
+    let f = File::open("conf.json").unwrap();
+    let v: serde_json::Value = serde_json::from_reader(f).unwrap();
+    let api_key = v["binance"]["api_key"].clone().to_string();
+    let secret_key = v["binance"]["secret_key"].clone().to_string();
+
+    let api_key = Some(api_key.into());
     let secret_key =
-        Some("GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA".into());
+        Some(secret_key.into());
     let account: Account = Binance::new(api_key, secret_key);
     account
 }
 
-pub fn post_ser() {}
+
 
 impl Server {
     pub fn get_price() {
@@ -95,10 +101,13 @@ impl Server {
         loop {
             
             // 1. 创建对应的量化程序
-            create_aip();
+            run_server();
             // 2. 接收来自main的消息
             let result = recv_main(&server_reciver,e.clone());
            
+
+
+
             // 3. 发送线程信息到中性化服务器 
             send_info(100,e.clone());
 
@@ -330,7 +339,7 @@ impl Server {
 
 
 
-fn create_aip(){
+fn run_server(){
 
 }
 
@@ -339,9 +348,7 @@ fn recv_main(server_reciver: &Receiver<OptionCode>,event:Event)-> bool{
 
     match rev {
         Ok(_) => {
-            println!("成功接收主线程");
-
-
+            // println!("成功接收主线程");
             match rev.unwrap() {
                 OptionCode::Shoutdown => {
                     return true;
@@ -394,7 +401,7 @@ fn recv_main(server_reciver: &Receiver<OptionCode>,event:Event)-> bool{
 
         },
         Err(_) => {
-            println!("接收主线程出错")
+            println!("")
         },
     }
 

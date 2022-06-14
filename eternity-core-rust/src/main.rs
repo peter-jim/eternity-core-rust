@@ -29,7 +29,7 @@ use std::thread;
 fn main() -> Result<(), Box<dyn Error>> {
     clean_mysql_running();
 
-
+    let mut server_list = Vec::new();
 
     loop {
         // updata_conf();
@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         update_event_by_station(serveraddress.clone());
         update_option_by_station(serveraddress);
 
-        let mut server_list = Vec::new();
+       
         
         let server = process_event();
         let option = process_option();
@@ -69,7 +69,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             },
         }
         
-        
+        println!("当前有{:?}个线程在运行",server_list.len());
 
         // let event_result = get_pending_v2();
         // let option_result = get_option_code_v2();
