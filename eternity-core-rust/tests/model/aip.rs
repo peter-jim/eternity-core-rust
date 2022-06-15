@@ -1,5 +1,5 @@
 
-
+use eternity_core_rust::account;
 
 #[cfg(test)]
 mod tests {
@@ -7,7 +7,8 @@ mod tests {
     
     #[test]
     fn aip(){
-        inital_account() 
+        let account = inital_account() ;
+        let result_price = market.get_price("GLMRBUSD");
     }
     
     
@@ -24,5 +25,8 @@ mod tests {
         let account: Account = Binance::new(api_key, secret_key);
         account
     }
+
+
+    
 }
 

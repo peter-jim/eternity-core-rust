@@ -17,6 +17,7 @@ use web3::{
 };
 use std::fs::File;
 use std::io::BufWriter;
+use chrono::prelude::*;
 
 
 
@@ -104,9 +105,6 @@ impl Server {
             run_server();
             // 2. 接收来自main的消息
             let result = recv_main(&server_reciver,e.clone());
-           
-
-
 
             // 3. 发送线程信息到中性化服务器 
             send_info(100,e.clone());
@@ -537,8 +535,30 @@ fn update(event:Event){
         }
     }
 
+
+
+
 }
 
+
+pub fn is_legal_time(before:DateTime<Local>)  -> bool{
+
+    let now = Local::now();
+
+    // before.minute();
+    // before.hour();
+    // before.num_days_from_ce();
+
+    if now.num_days_from_ce() - before.num_days_from_ce() >= 30 {
+        if now.hour() >=before.hour(){
+            if now.minute() >= before.minute(){
+                println!("合法")
+            }
+        }
+    }
+    false
+
+}
 
 
 

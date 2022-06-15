@@ -18,7 +18,7 @@
             "AIP":[20,10,20,20],
             "AIP30":[100,199]
         },
-        "maxaccount":4
+        "maxaccount":1
     },
     "mexc":{
         "address":"  ",
@@ -40,8 +40,4 @@
         "IP":"www.eternitylab.cn",
         "port":"5000"
     }
-
-
-    
-
 }
