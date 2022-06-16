@@ -101,19 +101,33 @@ mod tests{
 
         println!("{:?}",answer)
     }
+
+    #[test]
+    fn test_inital_account(){
+        let f = File::open("conf.json").unwrap();
+        let v: serde_json::Value = serde_json::from_reader(f).unwrap();
+       
+        let api_key = v["binance"]["api_key"].as_str().unwrap().clone();
+        let secret_key = v["binance"]["secrect_key"].as_str().unwrap().clone();
+        println!("{:?}", api_key);
+        println!("{:?}", secret_key);
+    }
     
     
     pub fn inital_account() -> Account {
     
         let f = File::open("conf.json").unwrap();
         let v: serde_json::Value = serde_json::from_reader(f).unwrap();
-        let api_key = v["binance"]["api_key"].clone().to_string();
-        let secret_key = v["binance"]["secret_key"].clone().to_string();
-    
-        let api_key = Some(api_key.into());
+        let api_key = v["binance"]["api_key"].as_str().unwrap().to_string().clone();
+        let secret_key = v["binance"]["secrect_key"].as_str().unwrap().to_string().clone();
+        println!("{:?}", api_key);
+        println!("{:?}", secret_key);
+        let api_key = Some(api_key);
         let secret_key =
-            Some(secret_key.into());
+            Some(secret_key);
         let account: Account = Binance::new(api_key, secret_key);
+
+
         account
     }
 
@@ -121,8 +135,8 @@ mod tests{
         let f = File::open("conf.json").unwrap();
         let v: serde_json::Value = serde_json::from_reader(f).unwrap();
         let api_key = v["binance"]["api_key"].clone().to_string();
-        let secret_key = v["binance"]["secret_key"].clone().to_string();
-    
+        let secret_key = v["binance"]["secrect_key"].clone().to_string();
+        
         let api_key = Some(api_key.into());
         let secret_key =
             Some(secret_key.into());
@@ -136,12 +150,27 @@ mod tests{
     #[test]
     fn get_price(){
         let market: Market = inital_market();
+        let account: Account = inital_account();
 
         // Latest price for ONE symbol
         match market.get_price("KNCETH") {
         Ok(answer) => println!("{:?}", answer),
         Err(e) => println!("Error: {}", e),
-    }
+        }
+
+        let a =  match account.get_account(){
+            Ok(answer) => 
+                {
+                    println!("{:?}", answer)
+                },
+            Err(e) => println!("Error: {}", e),
+        };
+
+        match account.get_open_orders("GLMRBUSD") {
+            Ok(answer) => println!("{:?}", answer),
+            Err(e) => println!("Error: {}", e),
+        }
+
     }
 
 }

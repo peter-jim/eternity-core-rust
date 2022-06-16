@@ -62,38 +62,9 @@ pub fn inital_account() -> Account {
 
 
 impl Server {
-    pub fn get_price() {
-        println!("hello");
-        let market: Market = Binance::new(
-            Option::Some(String::from(
-                "y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx",
-            )),
-            Option::Some(String::from(
-                "GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA",
-            )),
-        );
-        // Latest price for ONE symbol
-        match market.get_price("BNBUSDT") {
-            Ok(answer) => println!("{:?}", answer),
-            Err(e) => println!("Error: {}", e),
-        }
-    }
+    
 
-    pub fn get_account() {
-        let account: Account = Binance::new(
-            Option::Some(String::from(
-                "y5r59DKiJ1b6MvJmxRhhDSjcAmsf5blzdqIhjGpudvrEmurVu0KJXUCdqoQpcxBx",
-            )),
-            Option::Some(String::from(
-                "GEhNOnOBARV3NdSZRk2w6uw0qjJIWTBYSOBk7f4UzmcGPurzh6qU4YC0sbSfJgiA",
-            )),
-        );
-
-        match account.get_account() {
-            Ok(answer) => println!("{:?}", answer),
-            Err(e) => println!("Error: {}", e),
-        }
-    }
+   
 
     pub fn AIP(server_reciver: Receiver<OptionCode>, server_sender: Sender<OptionCode>,event:Event) {
         println!("启动线程 AIP");
@@ -338,6 +309,23 @@ impl Server {
 
 
 fn run_server(){
+    let market = inital_market();
+    let account = inital_account();
+    
+    let a =  match account.get_account(){
+        Ok(answer) => 
+            {
+                println!("{:?}", answer)
+            },
+        Err(e) => println!("Error: {}", e),
+    };
+
+    // Latest price for ONE symbol
+    match market.get_price("KNCETH") {
+        Ok(answer) => println!("{:?}", answer),
+        Err(e) => println!("Error: {}", e),
+    }
+    
 
 }
 
@@ -614,3 +602,24 @@ fn build_server(
 
     return server
 }
+
+
+pub fn inital_market() ->Market{
+    let f = File::open("conf.json").unwrap();
+    let v: serde_json::Value = serde_json::from_reader(f).unwrap();
+    let api_key = v["binance"]["api_key"].clone().to_string();
+    let secret_key = v["binance"]["secret_key"].clone().to_string();
+
+    let api_key = Some(api_key.into());
+    let secret_key =
+        Some(secret_key.into());
+
+    let market: Market = Binance::new(api_key, secret_key);
+    market
+
+}
+
+
+
+
+
