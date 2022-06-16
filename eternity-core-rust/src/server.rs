@@ -45,19 +45,7 @@ pub struct OrderStatus {
     pub compare: String,
 }
 
-pub fn inital_account() -> Account {
 
-    let f = File::open("conf.json").unwrap();
-    let v: serde_json::Value = serde_json::from_reader(f).unwrap();
-    let api_key = v["binance"]["api_key"].clone().to_string();
-    let secret_key = v["binance"]["secret_key"].clone().to_string();
-
-    let api_key = Some(api_key.into());
-    let secret_key =
-        Some(secret_key.into());
-    let account: Account = Binance::new(api_key, secret_key);
-    account
-}
 
 
 
@@ -604,12 +592,30 @@ fn build_server(
 }
 
 
+pub fn inital_account() -> Account {
+    
+    let f = File::open("conf.json").unwrap();
+    let v: serde_json::Value = serde_json::from_reader(f).unwrap();
+    let api_key = v["binance"]["api_key"].as_str().unwrap().to_string().clone();
+    let secret_key = v["binance"]["secrect_key"].as_str().unwrap().to_string()
+    .clone();
+    println!("{:?}", api_key);
+    println!("{:?}", secret_key);
+    let api_key = Some(api_key);
+    let secret_key =
+        Some(secret_key);
+    let account: Account = Binance::new(api_key, secret_key);
+
+
+    account
+}
+
 pub fn inital_market() ->Market{
     let f = File::open("conf.json").unwrap();
     let v: serde_json::Value = serde_json::from_reader(f).unwrap();
     let api_key = v["binance"]["api_key"].clone().to_string();
-    let secret_key = v["binance"]["secret_key"].clone().to_string();
-
+    let secret_key = v["binance"]["secrect_key"].clone().to_string();
+    
     let api_key = Some(api_key.into());
     let secret_key =
         Some(secret_key.into());

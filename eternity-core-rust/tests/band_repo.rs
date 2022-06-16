@@ -92,7 +92,9 @@ mod tests{
         let account = inital_account();
 
         // 获取账户余额
-        let answer = account.get_account().unwrap();
+        let answer = account.get_account().unwrap().balances;
+        println!("balance is  {:?}",answer);
+
 
         //获取交易所订单
         let answer = account.get_open_orders("GLMRBUSD");
@@ -100,6 +102,9 @@ mod tests{
         std::thread::sleep(std::time::Duration::from_secs(10));
 
         println!("{:?}",answer)
+
+
+
     }
 
     #[test]
@@ -119,7 +124,8 @@ mod tests{
         let f = File::open("conf.json").unwrap();
         let v: serde_json::Value = serde_json::from_reader(f).unwrap();
         let api_key = v["binance"]["api_key"].as_str().unwrap().to_string().clone();
-        let secret_key = v["binance"]["secrect_key"].as_str().unwrap().to_string().clone();
+        let secret_key = v["binance"]["secrect_key"].as_str().unwrap().to_string()
+        .clone();
         println!("{:?}", api_key);
         println!("{:?}", secret_key);
         let api_key = Some(api_key);
@@ -161,7 +167,14 @@ mod tests{
         let a =  match account.get_account(){
             Ok(answer) => 
                 {
-                    println!("{:?}", answer)
+                    // println!("{:?}", answer.balances)
+
+                    for i in answer.balances{
+                        if i.asset == "BUSD"{
+                            println!("{:?}",i);
+                        }
+                    }
+
                 },
             Err(e) => println!("Error: {}", e),
         };
@@ -172,6 +185,54 @@ mod tests{
         }
 
     }
+
+    
+    #[derive(Debug)]
+    struct AIPEvent{
+        pub time:i32,
+        pub status:String,
+        pub balance:f32,
+        pub side:String,  //BID or ASK
+        pub orderid:String,
+        pub useraddress:String,
+    }
+
+
+    #[test]
+    fn test_time_task_builder(){
+        time_task_builder();
+    }
+
+
+    fn time_task_builder() -> Vec<AIPEvent>{
+
+        let mut task = Vec::new();
+        let time = Local::now();
+        
+        task.push(Local::now().num_days_from_ce() + 1);
+        let mut mission_task = Vec::new();
+        let num = Local::now().num_days_from_ce();
+        //定投30天
+        for i in 0..30{
+
+            mission_task.push(AIPEvent{
+                time:num + i,
+                status:"pending".to_string(),
+                balance:100.0,
+                side:"ASK".to_string(),
+                orderid:"xxxx".to_string(),
+                useraddress: "xxx".to_string(),
+            })
+            
+        }
+        
+        println!("{:?}",mission_task);
+
+
+
+        return mission_task
+    } 
+
 
 }
 
