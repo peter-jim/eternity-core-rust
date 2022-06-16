@@ -60,17 +60,23 @@ impl Server {
             pub useraddress: String,
         }
 
-        let mut task: Vec<AIPEvent> = task_builder(e.clone());
+        //这里可能会存在一个bug，task 获取错误的网络状态。
+        let mut task= task_builder(e.clone()).unwrap();
+
+
+        // 1. 创建对应的量化程序
+        let account:Account = inital_account();
+       
 
         loop {
-            // 1. 创建对应的量化程序
-            let account = inital_account();
-
+            
+            //run_server
             for i in 0..task.len() {
                 //比较时间
                 if is_legal_time(task[i].time)
-                    && task[i].status != "pending"
+                    && task[i].status == "pending"
                     && task[i].status != "running"
+                    && task[i].status != "finish"
                 {
                     match account.market_buy("symbol", 10) {
                         Ok(_) => {
@@ -85,7 +91,7 @@ impl Server {
             }
             // run_server(task);
             // 2. 接收来自main的消息
-            let result = recv_main(&server_reciver, e.clone());
+            let result:bool = recv_main(&server_reciver, e.clone());
 
             // 3. 发送线程信息到中性化服务器
             send_info(100, e.clone());
@@ -116,7 +122,7 @@ impl Server {
         }
 
         //creat AIP taks with time.
-        fn task_builder(event: Event) -> Vec<AIPEvent> {
+        fn task_builder(event: Event) ->Result<Vec<AIPEvent>,String>{
             let account = inital_account();
             let busd_r = account.get_account();
 
@@ -127,10 +133,12 @@ impl Server {
                     if i.asset == "BUSD" {
                         println!("{:?}", i);
                         busd = i.free.parse().unwrap();
+                        
                     }
                 }
             } else {
                 println!("网络错误，无法获取到账户BUSD额度");
+                return Result::Err("error".to_string());
             }
 
             let mut task = Vec::new();
@@ -150,8 +158,14 @@ impl Server {
             }
 
             println!("{:?}", mission_task);
-            return mission_task;
+            return Result::Ok(mission_task) ;
         }
+
+        fn aip_send_info(){
+
+        }
+
+
     }
 
     pub fn AIP_30(server_reciver: Receiver<OptionCode>, server_sender: Sender<OptionCode>) {
