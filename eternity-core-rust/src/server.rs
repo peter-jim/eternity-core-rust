@@ -1,4 +1,3 @@
-use serde::Serialize;
 use crate::account::*;
 use crate::api::*;
 use crate::event::Event;
@@ -7,19 +6,16 @@ use crate::mpscanaly::*;
 use crate::mysql::update_event_pending;
 use crate::mysql::update_event_runing;
 use crate::mysql::update_option_running;
+use chrono::prelude::*;
+use secp256k1::SecretKey;
+use serde::Serialize;
+use std::fs::File;
+use std::io::BufWriter;
 use std::str::FromStr;
 use std::sync::mpsc::channel;
 use std::thread;
 use std::{sync::mpsc::Receiver, sync::mpsc::Sender, thread::JoinHandle};
-use secp256k1::SecretKey;
-use web3::{
-    contract::{Contract, Options},
-};
-use std::fs::File;
-use std::io::BufWriter;
-use chrono::prelude::*;
-
-
+use web3::contract::{Contract, Options};
 
 #[derive(Debug)]
 pub struct Server {
@@ -45,37 +41,116 @@ pub struct OrderStatus {
     pub compare: String,
 }
 
-
-
-
-
 impl Server {
-    
-
-   
-
-    pub fn AIP(server_reciver: Receiver<OptionCode>, server_sender: Sender<OptionCode>,event:Event) {
+    pub fn AIP(
+        server_reciver: Receiver<OptionCode>,
+        server_sender: Sender<OptionCode>,
+        event: Event,
+    ) {
         println!("启动线程 AIP");
         let e = event;
 
+        #[derive(Debug, Clone)]
+        struct AIPEvent {
+            pub time: i32,
+            pub status: String,
+            pub balance: f32,
+            pub side: String, //BID or ASK
+            pub orderid: String,
+            pub useraddress: String,
+        }
+
+        let mut task: Vec<AIPEvent> = task_builder(e.clone());
+
         loop {
-            
             // 1. 创建对应的量化程序
-            run_server();
+            let account = inital_account();
+
+            for i in 0..task.len() {
+                //比较时间
+                if is_legal_time(task[i].time)
+                    && task[i].status != "pending"
+                    && task[i].status != "running"
+                {
+                    match account.market_buy("symbol", 10) {
+                        Ok(_) => {
+                            println!("order success");
+                            task[i].status = "finish".to_string();
+                        }
+                        Err(err) => {
+                            println!("order {:?}", err)
+                        }
+                    }
+                }
+            }
+            // run_server(task);
             // 2. 接收来自main的消息
-            let result = recv_main(&server_reciver,e.clone());
+            let result = recv_main(&server_reciver, e.clone());
 
-            // 3. 发送线程信息到中性化服务器 
-            send_info(100,e.clone());
+            // 3. 发送线程信息到中性化服务器
+            send_info(100, e.clone());
 
-            if result == true{
+            if result == true {
                 println!("服务完毕结束线程");
                 break;
             }
 
             std::thread::sleep(std::time::Duration::from_secs(3));
+        }
 
-            
+        /*
+        ----------------  utils tool function --------------------------------------------------------
+        */
+
+        fn is_legal_time(before: i32) -> bool {
+            let now = Local::now();
+
+            // before.minute();
+            // before.hour();
+            // before.num_days_from_ce();
+
+            if now.num_days_from_ce() > before {
+                return true;
+            }
+            false
+        }
+
+        //creat AIP taks with time.
+        fn task_builder(event: Event) -> Vec<AIPEvent> {
+            let account = inital_account();
+            let busd_r = account.get_account();
+
+            // get account busd balance
+            let mut busd: f32 = 0.0;
+            if busd_r.is_ok() {
+                for i in busd_r.unwrap().balances {
+                    if i.asset == "BUSD" {
+                        println!("{:?}", i);
+                        busd = i.free.parse().unwrap();
+                    }
+                }
+            } else {
+                println!("网络错误，无法获取到账户BUSD额度");
+            }
+
+            let mut task = Vec::new();
+            task.push(Local::now().num_days_from_ce() + 1);
+            let mut mission_task = Vec::new();
+            let num = Local::now().num_days_from_ce();
+            //定投30天
+            for i in 0..30 {
+                mission_task.push(AIPEvent {
+                    time: num + i,
+                    status: "pending".to_string(),
+                    balance: busd.clone() / 30.0,
+                    side: "ASK".to_string(),
+                    orderid: format!("AIP{}", &i),
+                    useraddress: event.useraddress.clone(),
+                })
+            }
+
+            println!("{:?}", mission_task);
+            return mission_task;
         }
     }
 
@@ -294,30 +369,7 @@ impl Server {
     }
 }
 
-
-
-fn run_server(){
-    let market = inital_market();
-    let account = inital_account();
-    
-    let a =  match account.get_account(){
-        Ok(answer) => 
-            {
-                println!("{:?}", answer)
-            },
-        Err(e) => println!("Error: {}", e),
-    };
-
-    // Latest price for ONE symbol
-    match market.get_price("KNCETH") {
-        Ok(answer) => println!("{:?}", answer),
-        Err(e) => println!("Error: {}", e),
-    }
-    
-
-}
-
-fn recv_main(server_reciver: &Receiver<OptionCode>,event:Event)-> bool{
+fn recv_main(server_reciver: &Receiver<OptionCode>, event: Event) -> bool {
     let rev = server_reciver.recv();
 
     match rev {
@@ -327,26 +379,26 @@ fn recv_main(server_reciver: &Receiver<OptionCode>,event:Event)-> bool{
                 OptionCode::Shoutdown => {
                     return true;
                     //取消所有的订单
-        
+
                     //检查所有的订单是否取消
-        
+
                     //如果因为网络问题，没有取消则继续取消。
-        
+
                     //3次发送 网络错误
                 }
                 OptionCode::AllBalance => {
                     println!("xxx");
                     return true;
-        
+
                     //获取账户余额
-        
+
                     //通过send发送回去
                 }
                 OptionCode::AllOrder => {
-                    println!("xxx") ;
+                    println!("xxx");
                     return true;
                     //获取账户订单
-        
+
                     //通过send发送回去
                 }
                 OptionCode::ErrorStatus => {
@@ -354,71 +406,62 @@ fn recv_main(server_reciver: &Receiver<OptionCode>,event:Event)-> bool{
                     //返回ErrorStatus列表
                     return true;
                 }
-        
+
                 OptionCode::Withdraw => {
                     println!("启动提款线程");
-                    let result =  send_event_to_moonbeam();
+                    let result = send_event_to_moonbeam();
                     //返回ErrorStatus列表
-                     //step 1，检查返回状态
+                    //step 1，检查返回状态
                     //step 2. 关闭服务。
                     // update(event);
                     update_event_runing(event.transactionhash.clone());
                     update_option_running(event.transactionhash.clone());
 
-                    
                     return true;
-        
                 }
-                
             }
-        
-
-        },
+        }
         Err(_) => {
             println!("")
-        },
+        }
     }
 
-
-    return false; 
+    return false;
 }
 
 //send info to server node
-fn send_info( usdt:i32,event:Event){
-    
+fn send_info(usdt: i32, event: Event) {
     #[derive(Serialize)]
-        struct Info<'a> {
-            profile: f32,
-            balance:f32,
-            dexaddress:&'a str,
-            model:&'a str,
-            serveraddress:&'a str,
-            transactionhash:&'a str,
-            useraddress:&'a str,           
-        }
+    struct Info<'a> {
+        profile: f32,
+        balance: f32,
+        dexaddress: &'a str,
+        model: &'a str,
+        serveraddress: &'a str,
+        transactionhash: &'a str,
+        useraddress: &'a str,
+    }
 
     println!(" 更新信息到node  ");
     let client = reqwest::blocking::Client::builder()
-    .pool_idle_timeout(None)
-    .build()
-    .unwrap();
+        .pool_idle_timeout(None)
+        .build()
+        .unwrap();
 
-    let response = client.get("http://127.0.0.1:5000/node").json(&Info{
-        profile: 100.0,
-        balance:event.balance,
-        dexaddress:&event.dexaddress,
-        model:&event.model,
-        serveraddress:&event.serveraddress,
-        transactionhash:&event.transactionhash,
-        useraddress:&event.useraddress,  
-    }).send().ok();
-
-
+    let response = client
+        .get("http://127.0.0.1:5000/node")
+        .json(&Info {
+            profile: 100.0,
+            balance: event.balance,
+            dexaddress: &event.dexaddress,
+            model: &event.model,
+            serveraddress: &event.serveraddress,
+            transactionhash: &event.transactionhash,
+            useraddress: &event.useraddress,
+        })
+        .send()
+        .ok();
 }
-
-
-
-
 
 #[tokio::main]
 async fn send_event_to_moonbeam() -> web3::contract::Result<()> {
@@ -457,7 +500,6 @@ async fn send_event_to_moonbeam() -> web3::contract::Result<()> {
         )
         .await?;
 
-        
     println!("确认后的交易是 {:?}", &tx_re);
 
     std::thread::sleep(std::time::Duration::from_secs(30));
@@ -466,7 +508,7 @@ async fn send_event_to_moonbeam() -> web3::contract::Result<()> {
 }
 
 //更新op_runing ---> op_finish   runing ---> finish
-fn update(event:Event){
+fn update(event: Event) {
     let f_op_running = File::open("./storage/op_running.json").unwrap();
     let f_op_finish = File::open("./storage/op_finish.json").unwrap();
     let f_running = File::open("./storage/running.json").unwrap();
@@ -482,97 +524,58 @@ fn update(event:Event){
     let mut arrary_running = v_running.as_array().unwrap().clone();
     let mut arrary_finish = v_finish.as_array().unwrap().clone();
 
-
     //remove op_runing ,and add to finish
-    for i in 0..arrary_op_running.len(){
-        if arrary_op_running.get(i).unwrap()["transactionHash"] == event.transactionhash{
-           
-
-
-            arrary_op_finish.push( arrary_op_running[i].clone());
+    for i in 0..arrary_op_running.len() {
+        if arrary_op_running.get(i).unwrap()["transactionHash"] == event.transactionhash {
+            arrary_op_finish.push(arrary_op_running[i].clone());
             arrary_op_running.remove(i);
 
             let writer = BufWriter::new(File::create("./storage/op_finish.json").unwrap());
             serde_json::to_writer_pretty(writer, &arrary_running).unwrap();
         }
-
     }
 
     //remove runing,and add to finish
-    for i in 0..arrary_running.len(){
-        if arrary_running.get(i).unwrap()["transactionHash"] == event.transactionhash{
-            arrary_finish.push( arrary_running[i].clone());
+    for i in 0..arrary_running.len() {
+        if arrary_running.get(i).unwrap()["transactionHash"] == event.transactionhash {
+            arrary_finish.push(arrary_running[i].clone());
             arrary_running.remove(i);
 
             let writer = BufWriter::new(File::create("./storage/finish.json").unwrap());
             serde_json::to_writer_pretty(writer, &arrary_finish).unwrap();
-
-
         }
     }
-
-
-
-
 }
 
-
-pub fn is_legal_time(before:DateTime<Local>)  -> bool{
-
-    let now = Local::now();
-
-    // before.minute();
-    // before.hour();
-    // before.num_days_from_ce();
-
-    if now.num_days_from_ce() - before.num_days_from_ce() >= 30 {
-        if now.hour() >=before.hour(){
-            if now.minute() >= before.minute(){
-                println!("合法")
-            }
-        }
-    }
-    false
-
-}
-
-
-
-pub fn create_server(event:Event) -> Result<Server,String>{
-
+pub fn create_server(event: Event) -> Result<Server, String> {
     let (centrial_sender, server_reciver) = channel();
     let (server_sender, centrial_reciver) = channel();
 
     let e = event.clone();
- 
+
     match event.model.as_str() {
         "AIP" => {
             println!("创建服务");
             let controler =
-            thread::spawn(move || Server::AIP(server_reciver, server_sender, event.clone()));
+                thread::spawn(move || Server::AIP(server_reciver, server_sender, event.clone()));
             let server = build_server(e, centrial_sender, centrial_reciver, controler);
-            return Result::Ok(server)
+            return Result::Ok(server);
         }
 
         //如果我们有新的程序更新，再这添加即可。
-
-        _ =>{
+        _ => {
             println!("create error");
             return Result::Err("create error".to_string());
         }
     }
-
 }
-
-
 
 fn build_server(
     event: Event,
     centrial_sender: Sender<OptionCode>,
     centrial_reciver: Receiver<OptionCode>,
     controler: thread::JoinHandle<()>,
-) -> Server{
-
+) -> Server {
     let server = Server {
         threading: controler,
         server_reciver: centrial_reciver,
@@ -588,44 +591,40 @@ fn build_server(
     //更新到数据库
     update_event_pending(event.transactionhash);
 
-    return server
+    return server;
 }
 
-
 pub fn inital_account() -> Account {
-    
     let f = File::open("conf.json").unwrap();
     let v: serde_json::Value = serde_json::from_reader(f).unwrap();
-    let api_key = v["binance"]["api_key"].as_str().unwrap().to_string().clone();
-    let secret_key = v["binance"]["secrect_key"].as_str().unwrap().to_string()
-    .clone();
+    let api_key = v["binance"]["api_key"]
+        .as_str()
+        .unwrap()
+        .to_string()
+        .clone();
+    let secret_key = v["binance"]["secrect_key"]
+        .as_str()
+        .unwrap()
+        .to_string()
+        .clone();
     println!("{:?}", api_key);
     println!("{:?}", secret_key);
     let api_key = Some(api_key);
-    let secret_key =
-        Some(secret_key);
+    let secret_key = Some(secret_key);
     let account: Account = Binance::new(api_key, secret_key);
-
 
     account
 }
 
-pub fn inital_market() ->Market{
+pub fn inital_market() -> Market {
     let f = File::open("conf.json").unwrap();
     let v: serde_json::Value = serde_json::from_reader(f).unwrap();
     let api_key = v["binance"]["api_key"].clone().to_string();
     let secret_key = v["binance"]["secrect_key"].clone().to_string();
-    
+
     let api_key = Some(api_key.into());
-    let secret_key =
-        Some(secret_key.into());
+    let secret_key = Some(secret_key.into());
 
     let market: Market = Binance::new(api_key, secret_key);
     market
-
 }
-
-
-
-
-

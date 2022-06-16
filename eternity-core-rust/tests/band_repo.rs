@@ -88,21 +88,28 @@ mod tests{
     }
     #[test]
     fn aip(){
-        // step1 账户初始化
-        let account = inital_account();
+        // // step1 账户初始化
+        // let account = inital_account();
 
-        // 获取账户余额
-        let answer = account.get_account().unwrap().balances;
-        println!("balance is  {:?}",answer);
+        // // 获取账户余额
+        // let answer = account.get_account().unwrap().balances;
+        // println!("balance is  {:?}",answer);
 
 
-        //获取交易所订单
-        let answer = account.get_open_orders("GLMRBUSD");
+        // //获取交易所订单
+        // let answer = account.get_open_orders("GLMRBUSD");
 
-        std::thread::sleep(std::time::Duration::from_secs(10));
+        // std::thread::sleep(std::time::Duration::from_secs(10));
+        run_server();
 
-        println!("{:?}",answer)
+        // println!("{:?}",answer);
 
+        fn run_server(){
+            
+            println!(" run server ")
+            
+        
+        }
 
 
     }
