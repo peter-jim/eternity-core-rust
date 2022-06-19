@@ -2,6 +2,7 @@ use crate::account::*;
 use crate::api::*;
 use crate::event::Event;
 use crate::market::*;
+use crate::model::SymbolPrice;
 use crate::mpscanaly::*;
 use crate::mysql::update_event_pending;
 use crate::mysql::update_event_runing;
@@ -173,11 +174,34 @@ impl Server {
         event: Event){
 
         let account:Account = inital_account();
+        let maket:Market = inital_market();
 
-        match account.limit_buy("GMLRBUSD", 100, 0.1, create_orderid()){
+        struct LimityHolderBuyEvent{
+            endtime:i32,
+            stop_profit:f32,
+            stop_loss:f32,
+            orderid:String,
+
+        }
+        let mission = LimityHolderBuyEvent{
+            endtime:12,
+            stop_profit:0.1,
+            stop_loss:0.2,
+            orderid:create_orderid()
+        };
+
+        match account.limit_buy("GMLRBUSD", 100, 0.1, mission.orderid){
             Ok(_) => todo!(),
             Err(_) => todo!(),
         }
+
+       let SymbolPrice =  maket.get_price("GLMRBUSD");
+
+       
+
+
+
+
 
     }
 
