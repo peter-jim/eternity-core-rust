@@ -168,6 +168,8 @@ impl Server {
 
     }
 
+
+    //持有某个代币一段时间
     pub fn limity_holder_buy( server_reciver: Receiver<OptionCode>,
         server_sender: Sender<OptionCode>,
         event: Event){
@@ -199,22 +201,33 @@ impl Server {
             Err(_) => todo!(),
         }
 
-       let SymbolPrice =  maket.get_price("GLMRBUSD");
+    
         
        loop{
-            let SymbolPrice =  maket.get_price("GLMRBUSD");
+            let price =  maket.get_price("GLMRBUSD").unwrap();
 
             let now = Local::now().num_days_from_ce();
             if now >= mission.endtime{
                  //卖出
-                account.limit_sell("GLMRBUSD", 100, 0.2);
+                let _result =account.market_sell("GLMRBUSD", 100);
                 break;
             }
 
+            if price.price >= mission.stop_profit.into(){
+                //止盈
+                let result =account.market_sell("GLMRBUSD", 100);
+                break;
+            }
+
+            if price.price <= mission.stop_loss.into(){
+                //止损
+                let result =account.market_sell("GLMRBUSD", 100);
+                break;
+            }
+
+            std::thread::sleep(std::time::Duration::from_secs(1));
+
        }
-
-
-
        //------------------------------
        println!("server end");
 
