@@ -168,6 +168,19 @@ impl Server {
 
     }
 
+    pub fn limity_holder_buy( server_reciver: Receiver<OptionCode>,
+        server_sender: Sender<OptionCode>,
+        event: Event){
+
+        let account:Account = inital_account();
+
+        match account.limit_buy("GMLRBUSD", 100, 0.1, create_orderid()){
+            Ok(_) => todo!(),
+            Err(_) => todo!(),
+        }
+
+    }
+
     pub fn AIP_30(server_reciver: Receiver<OptionCode>, server_sender: Sender<OptionCode>) {
         /*
         （Automatic Investment Plan every day,total 30days.
@@ -382,6 +395,14 @@ impl Server {
         }
     }
 }
+
+
+fn create_orderid() -> String{
+
+    let time = Local::now().time().to_string();
+    return format!("limity_holder_buy{}", &time);
+}
+
 
 fn recv_main(server_reciver: &Receiver<OptionCode>, event: Event) -> bool {
     let rev = server_reciver.recv();

@@ -36,6 +36,7 @@ mod tests{
 
     let now2 = Local::now();
 
+    println!("hour now {:?}",now1.time());
     
 
 
