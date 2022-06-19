@@ -2,7 +2,6 @@ use crate::account::*;
 use crate::api::*;
 use crate::event::Event;
 use crate::market::*;
-use crate::model::SymbolPrice;
 use crate::mpscanaly::*;
 use crate::mysql::update_event_pending;
 use crate::mysql::update_event_runing;
@@ -177,18 +176,23 @@ impl Server {
         let maket:Market = inital_market();
 
         struct LimityHolderBuyEvent{
+            buyprice:f32,
             endtime:i32,
             stop_profit:f32,
             stop_loss:f32,
             orderid:String,
 
         }
+
         let mission = LimityHolderBuyEvent{
-            endtime:12,
-            stop_profit:0.1,
-            stop_loss:0.2,
+            buyprice:0.1,  //购买价格
+            endtime:Local::now().num_days_from_ce() + 3 ,  //持有3天
+            stop_profit:0.1,                    //止盈 10%
+            stop_loss:0.2,   //止损 10%
             orderid:create_orderid()
         };
+
+       
 
         match account.limit_buy("GMLRBUSD", 100, 0.1, mission.orderid){
             Ok(_) => todo!(),
@@ -196,11 +200,23 @@ impl Server {
         }
 
        let SymbolPrice =  maket.get_price("GLMRBUSD");
+        
+       loop{
+            let SymbolPrice =  maket.get_price("GLMRBUSD");
 
-       
+            let now = Local::now().num_days_from_ce();
+            if now >= mission.endtime{
+                 //卖出
+                account.limit_sell("GLMRBUSD", 100, 0.2);
+                break;
+            }
+
+       }
 
 
 
+       //------------------------------
+       println!("server end");
 
 
     }

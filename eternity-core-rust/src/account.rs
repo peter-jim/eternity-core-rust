@@ -36,6 +36,7 @@ struct OrderQuoteQuantityRequest {
 
 
 
+
 pub enum OrderType {
     Limit,
     Market,
@@ -117,6 +118,27 @@ impl Account {
         self.client.post_signed(API::Spot(Spot::Order), request)
     }
 
+     // Place a MARKET order - SELL
+     pub fn market_sell<S, F>(&self, symbol: S, qty: F) -> Result<Transaction>
+     where
+         S: Into<String>,
+         F: Into<f64>,
+     {
+         let sell: OrderRequest = OrderRequest {
+             symbol: symbol.into(),
+             qty: qty.into(),
+             price: 0.0,
+             stop_price: None,
+             order_side: OrderSide::Sell,
+             order_type: OrderType::Market,
+             time_in_force: TimeInForce::GTC,
+             new_client_order_id: None,
+         };
+         let order = self.build_order(sell);
+         let request = build_signed_request(order, self.recv_window)?;
+         self.client.post_signed(API::Spot(Spot::Order), request)
+     }
+
 
 
     // Place a LIMIT order - BUY
@@ -136,6 +158,29 @@ impl Account {
             new_client_order_id: Option::Some(orderid)
         };
         let order = self.build_order(buy);
+        let request = build_signed_request(order, self.recv_window)?;
+        self.client.post_signed(API::Spot(Spot::Order), request)
+    }
+
+
+   
+    // Place a LIMIT order - SELL
+    pub fn limit_sell<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<Transaction>
+    where
+        S: Into<String>,
+        F: Into<f64>,
+    {
+        let sell: OrderRequest = OrderRequest {
+            symbol: symbol.into(),
+            qty: qty.into(),
+            price,
+            stop_price: None,
+            order_side: OrderSide::Sell,
+            order_type: OrderType::Limit,
+            time_in_force: TimeInForce::GTC,
+            new_client_order_id: None,
+        };
+        let order = self.build_order(sell);
         let request = build_signed_request(order, self.recv_window)?;
         self.client.post_signed(API::Spot(Spot::Order), request)
     }
